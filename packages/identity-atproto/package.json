@@ -1,0 +1,32 @@
+{
+  "name": "@verared/identity-atproto",
+  "version": "0.1.0-alpha.1",
+  "description": "AT Protocol handle/DID resolution (did:plc/did:web) and optional APW reputation bridge.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/identity-atproto"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@verared/apw": "0.1.0-alpha.1"
+  }
+}

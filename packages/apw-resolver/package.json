@@ -1,0 +1,53 @@
+{
+  "name": "@verared/apw",
+  "version": "0.1.0-alpha.1",
+  "description": "Protocol APW resolver, did:apw identity/history verification, scoring primitives, and federation helpers.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/apw-resolver"
+  },
+  "main": "./dist/standalone.js",
+  "types": "./dist/standalone.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/standalone.d.ts",
+      "import": "./dist/standalone.js"
+    },
+    "./full": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./resolver": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./did-apw": {
+      "types": "./dist/did-apw/index.d.ts",
+      "import": "./dist/did-apw/index.js"
+    },
+    "./scoring": {
+      "types": "./dist/scoring/index.d.ts",
+      "import": "./dist/scoring/index.js"
+    },
+    "./federation": {
+      "types": "./dist/federation/index.d.ts",
+      "import": "./dist/federation/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@verared/net": "0.1.0-alpha.1",
+    "canonicalize": "^2.0.0"
+  }
+}

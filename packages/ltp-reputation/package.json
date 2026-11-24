@@ -1,0 +1,30 @@
+{
+  "name": "@verared/reputation",
+  "version": "0.1.0-alpha.1",
+  "description": "Deterministic G4 SVRI reputation engine: projection, eligibility, and static REP-01..REP-11 vector evaluator.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/ltp-reputation"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {}
+}

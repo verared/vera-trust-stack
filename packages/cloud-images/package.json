@@ -1,0 +1,32 @@
+{
+  "name": "@verared/cloud-images",
+  "version": "0.1.0-alpha.1",
+  "description": "APW-signed image metadata sidecars, PNG chunk verification, and storage ports.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/cloud-images"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@verared/apw": "0.1.0-alpha.1"
+  }
+}

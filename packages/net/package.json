@@ -1,0 +1,29 @@
+{
+  "name": "@verared/net",
+  "version": "0.1.0-alpha.1",
+  "description": "Neutral network safety, SSRF/DNS-rebinding guards, egress budgets, and client-IP trust rules (Web-API pure, L0-net).",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/net"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {}
+}

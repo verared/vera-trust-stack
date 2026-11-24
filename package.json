@@ -1,0 +1,35 @@
+{
+  "name": "vera-trust-stack",
+  "version": "0.1.0-alpha.1",
+  "description": "Vera Trust Stack monorepo: APW, Local Trust Protocol, SVRI/HSVR, neutral Trust Layer, Cloud Images, and ATProto Identity (Apache-2.0).",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build-packages.mjs",
+    "test": "vitest run",
+    "check:boundaries": "node scripts/check-stack-boundaries.mjs",
+    "smoke:tarballs": "node scripts/smoke-tarballs.mjs",
+    "pack:release": "node scripts/pack-release.mjs"
+  },
+  "devDependencies": {
+    "@noble/post-quantum": "^0.5.0",
+    "@types/node": "^22.15.0",
+    "canonicalize": "^2.0.0",
+    "esbuild": "^0.27.0",
+    "typescript": "~5.6.3",
+    "vitest": "^5.0.5",
+    "web-bot-auth": "^0.1.0"
+  }
+}

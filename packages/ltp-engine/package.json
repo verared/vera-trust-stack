@@ -1,0 +1,33 @@
+{
+  "name": "@verared/local-trust",
+  "version": "0.1.0-alpha.1",
+  "description": "Deterministic Local Trust Protocol acquisition and verification engine for identity-only APW proof packages (G2/G3).",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/ltp-engine"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@verared/net": "0.1.0-alpha.1",
+    "canonicalize": "^2.0.0"
+  }
+}

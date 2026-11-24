@@ -1,0 +1,54 @@
+{
+  "name": "@verared/trust-layer",
+  "version": "0.1.0-alpha.1",
+  "description": "Neutral Trust Layer: Web Bot Auth (Ed25519 + ML-DSA), Content Signals access policies, SiteTrustScore/SVRI, pay-per-crawl, and traceability ledger.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Gerardo Loyola",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verared/vera-trust-stack.git",
+    "directory": "packages/trust-layer"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./site-trust": {
+      "types": "./dist/site-trust/index.d.ts",
+      "import": "./dist/site-trust/index.js"
+    },
+    "./policy": {
+      "types": "./dist/policy/index.d.ts",
+      "import": "./dist/policy/index.js"
+    },
+    "./billing": {
+      "types": "./dist/billing/index.d.ts",
+      "import": "./dist/billing/index.js"
+    },
+    "./ledger": {
+      "types": "./dist/ledger/index.d.ts",
+      "import": "./dist/ledger/index.js"
+    },
+    "./net": {
+      "types": "./dist/net/index.d.ts",
+      "import": "./dist/net/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@noble/post-quantum": "^0.5.0",
+    "@verared/apw": "0.1.0-alpha.1",
+    "@verared/net": "0.1.0-alpha.1",
+    "web-bot-auth": "^0.1.0"
+  }
+}
