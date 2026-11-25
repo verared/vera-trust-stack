@@ -15,6 +15,7 @@
 
 import { D1Adapter, SqliteAdapter, type SqlAdapter } from '../did-apw/sql-adapter';
 import type { AttestationLogStore } from '../did-apw/attestation-log-store';
+import type { D1Database } from '../d1-database.js';
 
 export interface ReaderConductJtiRecord {
   siteId: string;

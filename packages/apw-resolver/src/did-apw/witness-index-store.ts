@@ -35,6 +35,7 @@
 // Los stores crean sus tablas al vuelo (mismo DDL que schema.sql).
 
 import { D1Adapter, SqliteAdapter, type SqlAdapter } from './sql-adapter';
+import type { D1Database } from '../d1-database.js';
 
 export const INVALID_WITNESS_WEIGHT = 'invalid_witness_weight';
 /** Peso maximo aceptado por testigo. */

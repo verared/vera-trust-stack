@@ -41,6 +41,7 @@
 // milisegundo.
 
 import type { ApwKeyPair } from "./types";
+import type { D1Database } from "../d1-database.js";
 import { jwkThumbprint } from "./fingerprint";
 import { didKeyId } from "./key-id";
 import { D1Adapter, SqliteAdapter, type SqlAdapter, type SqlStatement } from "./sql-adapter";

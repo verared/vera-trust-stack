@@ -20,6 +20,7 @@
 // las bases existentes; las entradas anteriores quedan con att_jws NULL.
 
 import { D1Adapter, SqliteAdapter, type SqlAdapter } from './sql-adapter';
+import type { D1Database } from '../d1-database.js';
 
 export interface AttestationLogEntry {
   siteId: string;

@@ -21,6 +21,7 @@
     "test": "vitest run",
     "check:boundaries": "node scripts/check-stack-boundaries.mjs",
     "smoke:tarballs": "node scripts/smoke-tarballs.mjs",
+    "smoke:types": "node scripts/smoke-tarballs.mjs --types",
     "pack:release": "node scripts/pack-release.mjs"
   },
   "devDependencies": {

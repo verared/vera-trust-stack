@@ -4,6 +4,7 @@
   "description": "Neutral network safety, SSRF/DNS-rebinding guards, egress budgets, and client-IP trust rules (Web-API pure, L0-net).",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": { "access": "public" },
   "author": "Gerardo Loyola",
   "repository": {
     "type": "git",

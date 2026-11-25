@@ -4,6 +4,7 @@
   "description": "AT Protocol handle/DID resolution (did:plc/did:web) and optional APW reputation bridge.",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": { "access": "public" },
   "author": "Gerardo Loyola",
   "repository": {
     "type": "git",

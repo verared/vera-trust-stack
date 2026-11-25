@@ -5,10 +5,11 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const checkTypes = process.argv.includes('--types');
 
 const PACKAGE_DIRS = [
   'net',
@@ -115,6 +116,38 @@ try {
   `;
   writeFileSync(join(consumerDir, 'smoke.mjs'), smokeScript, 'utf8');
   execFileSync(process.execPath, [join(consumerDir, 'smoke.mjs')], { cwd: consumerDir, stdio: 'inherit' });
+
+  if (checkTypes) {
+    const typeAssertions = [];
+    const names = new Set();
+    for (const dir of PACKAGE_DIRS) {
+      const manifest = JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8'));
+      const installedDir = join(consumerDir, 'node_modules', manifest.name);
+      const pkg = JSON.parse(readFileSync(join(installedDir, 'package.json'), 'utf8'));
+      if (pkg.publishConfig?.access !== 'public' || pkg.license !== 'Apache-2.0'
+        || pkg.engines?.node !== '>=24' || pkg.repository?.directory !== `packages/${dir}`
+        || !pkg.files?.includes('dist') || !existsSync(join(installedDir, 'LICENSE'))
+        || pkg.types !== pkg.exports?.['.']?.types) throw new Error(`Invalid publication metadata for ${manifest.name}`);
+      for (const [subpath, target] of Object.entries(pkg.exports)) {
+        const name = subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`;
+        names.add(name);
+        if (!existsSync(join(installedDir, target.types))) throw new Error(`Missing types for ${name}`);
+        const mod = await import(pathToFileURL(join(installedDir, target.import)).href);
+        // Check that every actual runtime export exists in the public declaration surface.
+        typeAssertions.push(`type Missing_${names.size} = AssertNever<Exclude<${Object.keys(mod).map(JSON.stringify).join(' | ') || 'never'}, keyof typeof import(${JSON.stringify(name)})>>;`);
+      }
+    }
+    const smokeNames = new Set([...smokeScript.matchAll(/from '([^']+)'/g)].map((match) => match[1]));
+    if (names.size !== 17 || smokeNames.size !== names.size || [...names].some((name) => !smokeNames.has(name))) {
+      throw new Error('Smoke imports must match all 17 declared entrypoints');
+    }
+    writeFileSync(join(consumerDir, 'smoke.mts'), `${smokeScript}\ntype AssertNever<T extends never> = T;\n${typeAssertions.join('\n')}\n`, 'utf8');
+    execFileSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'),
+      '--noEmit', '--strict', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2022', 'smoke.mts'], {
+      cwd: consumerDir, stdio: 'inherit',
+    });
+    console.log(`[smoke-types] Verified all ${names.size} public entrypoints with strict NodeNext resolution.`);
+  }
 } finally {
   if (existsSync(workDir)) rmSync(workDir, { recursive: true, force: true });
 }

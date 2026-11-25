@@ -4,6 +4,7 @@
   "description": "APW-signed image metadata sidecars, PNG chunk verification, and storage ports.",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": { "access": "public" },
   "author": "Gerardo Loyola",
   "repository": {
     "type": "git",
