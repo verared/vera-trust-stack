@@ -13,11 +13,6 @@ export const NONCES_DDL =
   "CREATE TABLE IF NOT EXISTS webbotauth_nonces (" +
   "nonce TEXT PRIMARY KEY, expires_at INTEGER NOT NULL)";
 
-export interface NonceStoreFactoryEnv {
-  DB?: unknown;
-  PORTALESS_SQLITE_PATH?: string;
-}
-
 export class InMemoryWebBotAuthNonceStore implements WebBotAuthNonceStore {
   private nonces = new Map<string, number>();
 

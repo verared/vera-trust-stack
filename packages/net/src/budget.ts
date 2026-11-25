@@ -1,6 +1,6 @@
 /**
  * Neutral egress & operation resource budgets (L0-net).
- * No Portaless headers, no SQLite/D1 dependencies.
+ * No host headers or persistence dependencies.
  */
 import type { SafeFetchLimits, SafeFetchResult, SafeFetcher } from "./safe-fetch";
 

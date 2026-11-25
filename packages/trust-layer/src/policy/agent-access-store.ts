@@ -4,10 +4,10 @@
 // fase 12 (la politica pasa a ser operable desde el panel, §12.1 + §12.2).
 //
 // Que resuelve: el middleware lee la politica publicada en
-// /.well-known/portaless-content-policy.json (asset) y, si no existe, cae a
+// /.well-known/vera-content-policy.json (asset) y, si no existe, cae a
 // defaultContentPolicy(). Eso obliga al dueno a editar un archivo y redesplegar
 // para cambiar una regla. Esta tabla guarda el override del panel, con una
-// fila unica (id = 1) porque una instancia de Portaless es single-site.
+// fila unica (id = 1) por instancia de sitio.
 //
 // Precedencia (documentada en load-policy.ts): store > asset > default.
 // Esta tabla NO va en REQUIRED_TABLES: su ausencia es un estado valido -- el

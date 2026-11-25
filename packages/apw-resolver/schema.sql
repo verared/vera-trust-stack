@@ -5,12 +5,12 @@
 --
 -- Identidad criptografica que ESTE sitio usa para firmarse a si mismo ante
 -- terceros via Protocol APW (Wizard de onboarding, Paso 3-4). NO confundir
--- con authorized_agents (agentes EXTERNOS que Portaless autoriza a ACCEDER
+-- con authorized_agents (agentes EXTERNOS que el sitio autoriza a ACCEDER
 -- a este sitio) ni con authorized_escrow_providers.
 --
 -- La clave privada NUNCA se persiste en texto plano: private_key_jwk_encrypted
 -- guarda el JWK cifrado con AES-GCM. La clave de cifrado vive fuera de esta
--- base de datos (env var PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY).
+-- base de datos (opción encryptionKey inyectada por el host).
 --
 -- Este archivo se concatena al maestro via scripts/generate-schema.mjs.
 -- No aplicar directamente contra una base de datos en produccion -- usar
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS reader_conduct_jti (
   PRIMARY KEY (site_id, jti)
 );
 
--- Portaless Index, agregador de testigos (APW v1.3, 5.7 y seccion 7):
+-- Witness Index, agregador de testigos (APW v1.3, 5.7 y seccion 7):
 -- observaciones VERIFICADAS recopiladas de los testigos configurados por
 -- sujeto (la ultima observacion anclada de cada testigo por seq, con su
 -- fecha creible = ts de la entrada del historial DEL TESTIGO), la

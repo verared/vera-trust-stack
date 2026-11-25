@@ -4,7 +4,7 @@
 // ni el proveedor.
 //
 // El dominio del sitio sale de la identidad APW (site_identity.domain): en
-// Portaless el dominio lo define Protocol APW. Sin identidad APW no se activa.
+// El dominio lo define Protocol APW. Sin identidad APW no se activa.
 
 import type { SettlementActivationStore } from "./activation-store";
 import { getPayPerCrawlProvider } from "./resolve";

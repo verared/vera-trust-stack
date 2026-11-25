@@ -3,7 +3,7 @@ import { resolveSpecDir } from "../spec-root";
  * APW conformance suite.
  *
  * This is the first time the published test vectors are actually executed.
- * APW-VECTORS-v1.3.md states that an implementation outside Portaless can verify
+ * APW-VECTORS-v1.3.md states that an independent implementation can verify
  * compatibility from the document alone; until this test existed, nothing in CI
  * checked that claim, and nothing checked the vectors at all.
  *

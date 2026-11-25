@@ -1,6 +1,6 @@
 // packages/apw-resolver/src/did-apw/witness-index-store.ts
 //
-// Estado del Portaless Index -- agregador de testigos (APW v1.3, 5.7 y
+// Estado del Witness Index -- agregador de testigos (APW v1.3, 5.7 y
 // seccion 7). Cinco tablas, un solo store:
 //
 //   witness_observations   observaciones ancladas que este nodo recopilo de

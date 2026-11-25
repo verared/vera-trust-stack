@@ -1,4 +1,4 @@
-// Interfaz de liquidacion de pagos. Portaless NO procesa pagos directamente
+// Interfaz de liquidación: la biblioteca no procesa pagos directamente
 // (mismo principio aplicado al modulo de comercio con Medusa/Mercur): delega
 // la ejecucion del cobro a un proveedor externo ya especializado en esto.
 
@@ -25,7 +25,7 @@ export interface SettlementProvider {
  * Adaptador de referencia para Cloudflare Pay per Crawl. Requiere que el
  * sitio corra detras de Cloudflare con AI Crawl Control habilitado; la
  * liquidacion real ocurre en la infraestructura de Cloudflare, este
- * adaptador solo confirma el resultado hacia el ledger de Portaless.
+ * adaptador solo confirma el resultado hacia el ledger del sitio.
  */
 export class CloudflarePayPerCrawlAdapter implements SettlementProvider {
   name = "cloudflare-pay-per-crawl";

@@ -37,7 +37,7 @@ export async function recordInSiteHistoryWithStores(
     return { logged: true, seq: entry.seq };
   } catch (err) {
     if ((err as Error)?.message === LOG_DUPLICATE_ATTESTATION) return { logged: true, reason: "already_logged" };
-    console.warn(`[Portaless APW] No se pudo anotar la atestacion en el historial: ${(err as Error)?.message}`);
+    console.warn(`[APW] No se pudo anotar la atestacion en el historial: ${(err as Error)?.message}`);
     return { logged: false, reason: "history_error" };
   }
 }

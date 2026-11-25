@@ -137,10 +137,10 @@ describe("resolveApwTxtRecord", () => {
   // para no romper el suite completo por falta de acceso a internet --
   // mismo criterio ya usado en otras partes del repo para adaptadores
   // externos sin cuenta de prueba disponible (ver ROADMAP.md, "Funciones Externas").
-  const hasNetwork = process.env.PORTALESS_ENABLE_NETWORK_TESTS === "1";
+  const hasNetwork = process.env.VERARED_ENABLE_NETWORK_TESTS === "1";
 
   it.skipIf(!hasNetwork)(
-    "resuelve un dominio real via DoH real (requiere PORTALESS_ENABLE_NETWORK_TESTS=1)",
+    "resuelve un dominio real via DoH real (requiere VERARED_ENABLE_NETWORK_TESTS=1)",
     async () => {
       // cloudflare.com no publica hoy un manifiesto APW real -- este test
       // verifica exclusivamente que la capa de transporte DoH funciona

@@ -26,7 +26,7 @@ const RFC_9421_ED25519_TEST_KEY = {
 const SIGNATURE_AGENT_HEADER = '"https://agent.example.test"';
 
 async function buildSignedRequest(): Promise<{ request: Request; realKeyId: string }> {
-  const request = new Request("https://portaless.example/trust/site.example/agent-verification", {
+  const request = new Request("https://host.example/trust/site.example/agent-verification", {
     method: "POST",
     headers: { "Signature-Agent": SIGNATURE_AGENT_HEADER },
   });
@@ -83,7 +83,7 @@ describe("verifyWebBotAuthRequest", () => {
   });
 
   it("devuelve verified:false si faltan los headers de firma -- nunca lanza", async () => {
-    const unsignedRequest = new Request("https://portaless.example/trust/site.example/agent-verification", {
+    const unsignedRequest = new Request("https://host.example/trust/site.example/agent-verification", {
       method: "POST",
     });
 

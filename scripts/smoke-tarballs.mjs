@@ -47,7 +47,7 @@ try {
     tarballs[pkg.name] = `file:${join(tarballsDir, filename)}`;
   }
 
-  // Consumer package.json mirrors the exact dependencies + overrides tarball pattern Portaless will use in W2.3
+  // Pin every workspace dependency to the exact tarball in the consumer.
   const consumerPkg = {
     name: 'verared-tarball-consumer-smoke',
     private: true,

@@ -2,7 +2,7 @@
 //
 // Punto de entrada MINIMO para un cliente externo de Protocol APW:
 // resolver un did:apw / dominio y verificar su manifest y cadena de
-// historia SIN depender del resto del monorepo de Portaless.
+// historia sin dependencias del host.
 //
 // Que incluye (y solo esto):
 //   - resolveApwManifest / resolveApwIdentity  — DNS TXT -> manifest
@@ -19,7 +19,7 @@
 // Que NO incluye: stores/DB ni I/O de ingestión. Las fórmulas puras LTP,
 // SVRI y los helpers de ranking sí son parte del surface de conformidad;
 // carga de reader_conduct, emisión, witnesses y registro de identidad viven
-// en el lado servidor de Portaless.
+// en las integraciones de servidor.
 //
 // Unicas dependencias externas de este grafo: `canonicalize` (JCS) y los
 // Web APIs (fetch, crypto.subtle). Nada de Node, nada de host SQLite,

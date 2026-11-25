@@ -1,4 +1,4 @@
-// Portaless Index (APW v1.3, 5.7 y seccion 7): agregador de testigos.
+// Witness Index (APW v1.3, 5.7 y seccion 7): agregador de testigos.
 // Todo el material es REAL (claves Ed25519, statements firmados, cadenas
 // encadenadas con appendAttestation): los checks del pipeline -- anclaje en
 // la cadena del testigo, att === sha256(jws), firma, jti determinista --
@@ -21,7 +21,7 @@ import { InMemoryWitnessIndexStore } from "../../packages/apw-resolver/src/did-a
 import type { ApwKeyPair } from "../../packages/apw-resolver/src/did-apw/types";
 import type { ApwHistoryResult } from "../../packages/apw-resolver/src/did-apw/history-resolver";
 
-const ENV = { PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))) };
+const ENV = { encryptionKey: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))) };
 const SITE_ID = "default";
 const SUBJECT_DOMAIN = "sujeto.example";
 const SUBJECT_DID = `did:apw:${SUBJECT_DOMAIN}`;
@@ -140,7 +140,7 @@ async function sync(input: { domain?: string; witnesses: string[]; weights?: Rec
   return syncWitnessIndex(depsFor(world), store, { siteId: SITE_ID, domain: input.domain ?? SUBJECT_DOMAIN, ...input });
 }
 
-describe("Portaless Index: syncWitnessIndex", () => {
+describe("Witness Index: syncWitnessIndex", () => {
   it("camino feliz: un testigo verifica de punta a punta y el sujeto queda consistente", async () => {
     const subject = await makeSite(SUBJECT_DOMAIN);
     const w1 = await makeSite(W1_DOMAIN);
@@ -287,7 +287,7 @@ describe("Portaless Index: syncWitnessIndex", () => {
   });
 });
 
-describe("Portaless Index: fail-closed por testigo", () => {
+describe("Witness Index: fail-closed por testigo", () => {
   it("cadena del testigo no verificada: se saltea entero (witness_chain_unverified)", async () => {
     const subject = await makeSite(SUBJECT_DOMAIN);
     await appendChain(subject, 1);
@@ -488,7 +488,7 @@ describe("Portaless Index: fail-closed por testigo", () => {
   });
 });
 
-describe("Portaless Index: documento publico", () => {
+describe("Witness Index: documento publico", () => {
   it("buildIndexDocument arma el documento plano y parseSubjectEntry ignora lo corrupto", async () => {
     const doc = buildIndexDocument([], { indexDid: "did:apw:indice.example", generatedAt: "t" });
     expect(doc).toMatchObject({ typ: INDEX_DOC_TYP, iss: "did:apw:indice.example", generatedAt: "t", subjects: [] });

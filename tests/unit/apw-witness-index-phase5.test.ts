@@ -1,4 +1,4 @@
-// Portaless Index Phase 5 (APW v1.3, 5.7 y seccion 7): calibracion de
+// Witness Index Phase 5 (APW v1.3, 5.7 y seccion 7): calibracion de
 // pesos estilo A.4.4 y sincronizacion entre nodos (syncIndexPeers).
 // Material REAL (claves Ed25519, statements firmados, cadenas): solo la
 // red y la resolucion de cadenas son fixtures.
@@ -19,7 +19,7 @@ import { InMemoryWitnessIndexStore } from "../../packages/apw-resolver/src/did-a
 import type { ApwKeyPair } from "../../packages/apw-resolver/src/did-apw/types";
 import type { ApwHistoryResult } from "../../packages/apw-resolver/src/did-apw/history-resolver";
 
-const ENV = { PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))) };
+const ENV = { encryptionKey: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))) };
 const SITE_ID = "default";
 const SUBJECT_DOMAIN = "sujeto.example";
 const W1_DOMAIN = "t1.example";

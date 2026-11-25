@@ -1,6 +1,6 @@
 // packages/apw-resolver/src/did-apw/types.ts
 //
-// Tipos del metodo de DID propio de Portaless: did:apw:<dominio>.
+// Tipos del metodo DID de APW: did:apw:<dominio>.
 // Distinto de did:plc (AT Protocol, usado por VeraDID) y de did:web
 // (W3C, requiere un endpoint HTTPS /.well-known/did.json). did:apw
 // reutiliza el mismo TXT record de Protocol APW (_apw.tudominio.com)
@@ -10,7 +10,7 @@
 // de que el servidor PLC de AT Protocol siga existiendo).
 //
 // Vision de largo plazo (ver ROADMAP.md, seccion "Onboarding de un
-// click"): este metodo de DID nace dentro de Portaless, pero esta
+// click"): este metodo de DID esta
 // disenado para ser consumido por fuera via un SDK de resolucion
 // separado (proyecto aparte, no este repo) -- el mismo patron de
 // "asociado oficial, repo propio" que ya se usa para AppPlace/AppLibre.

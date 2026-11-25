@@ -3,7 +3,7 @@
 // Cloudflare workerd, que no esta instalado como dependencia de tipos de
 // este paquete (no forma parte de la superficie standalone del cliente).
 // Firmas minimas para que el typecheck pase; en runtime el simbolo no
-// existe -- los stores D1 solo se usan en el lado servidor de Portaless,
+// existe -- los stores D1 solo se usan en integraciones de servidor,
 // no en el cliente verificador publicado.
 declare interface D1Database {
   prepare(sql: string): {

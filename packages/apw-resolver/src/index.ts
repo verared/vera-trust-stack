@@ -8,7 +8,7 @@
 // del TXT (DNS, raiz de confianza) y el documento /.well-known/did.json
 // (HTTPS). Si no coinciden, la identidad es invalida.
 //
-// Este es el punto de entrada que usara Portaless Index (pendiente, ver
+// Este es el punto de entrada que puede usar Witness Index (ver
 // ROADMAP.md) y cualquier agente externo que quiera verificar la identidad
 // APW de un sitio sin conocer los detalles de DNS-over-HTTPS.
 

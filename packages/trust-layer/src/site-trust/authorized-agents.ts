@@ -25,11 +25,8 @@
 // un endpoint bajo functions/admin/ sin pasar por el CLI. revoke() hace
 // soft-delete (active = 0) -- se preserva el historial.
 //
-// v0.0.9.27: SqliteAuthorizedAgentsStore migrado de node:sqlite a
-// host SQLite via openSqlite(). Uso: await SqliteAuthorizedAgentsStore.open(path).
-// La factory ya NO cae a memoria si PORTALESS_SQLITE_PATH esta definido y
-// SQLite no abre: antes eso dejaba la allowlist vacia en silencio y todos
-// los agentes legitimos quedaban rechazados sin ningun error visible.
+// El host inyecta el store persistente. Un fallo al abrirlo nunca debería
+// convertirse silenciosamente en una allowlist vacía.
 
 
 export interface AuthorizedAgent {
@@ -110,4 +107,3 @@ export class InMemoryAuthorizedAgentsStore implements AuthorizedAgentsStore {
     if (existing) existing.active = false;
   }
 }
-

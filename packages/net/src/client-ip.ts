@@ -1,6 +1,6 @@
 /**
  * Neutral client-IP and trusted-proxy parsing rules (L0-net, ROADMAP E-06).
- * Pure functions: never read HTTP headers (e.g. x-portaless-*) directly.
+ * Pure functions: never read HTTP headers directly.
  * Host runtimes and adapters extract headers and pass raw strings here.
  */
 

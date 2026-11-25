@@ -1,7 +1,7 @@
 // packages/apw-resolver/src/did-apw/history-resolver.ts
 //
 // Verificacion externa del historial encadenado de un dominio (APW v1.2,
-// seccion 5.4). Es lo que usaria Portaless Index o cualquier auditor: no
+// seccion 5.4). Es lo que usaria Witness Index o cualquier auditor: no
 // necesita acceso a la base del sitio ni a la API de su proveedor (Cloudflare,
 // self-host u otro). Solo usa el TXT `_apw.<dominio>` y
 // https://<dominio>/.well-known/apw-log.json.

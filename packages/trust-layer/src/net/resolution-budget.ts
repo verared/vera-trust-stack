@@ -6,6 +6,7 @@ import {
   hashClientIpBuckets,
   normalizeResolutionOrigin,
 } from "@verared/net";
+import { getClientIp, type TrustedIngress } from "./client-ip";
 
 export {
   RESOLUTION_BUDGET_PROPOSAL,
@@ -22,27 +23,20 @@ export type {
 } from "@verared/net";
 
 export interface TrustedClientContext {
-  runtime: "node" | "cloudflare";
-  trustedCloudflareIngress?: boolean;
+  ingress?: TrustedIngress;
   secret?: string;
   previousSecret?: string;
   now?: number;
 }
 
 /**
- * Portaless ingress adapter: extracts the runtime-trusted client IP header and
- * delegates rotating HMAC bucketing to neutral `@verared/net`.
- * Call only with server-controlled context; headers cannot select trust mode.
+ * Hashes only host-resolved IPs. Without trusted ingress, use a shared unknown bucket.
  */
 export async function resolutionClientBuckets(
   request: Request,
-  context: TrustedClientContext,
+  context: TrustedClientContext = {},
 ): Promise<string[]> {
-  if (context.runtime !== "node" && context.runtime !== "cloudflare") return ["unknown"];
-  if (context.runtime === "cloudflare" && !context.trustedCloudflareIngress) return ["unknown"];
-  const ip = request.headers
-    .get(context.runtime === "node" ? "x-portaless-client-ip" : "CF-Connecting-IP")
-    ?.trim();
+  const ip = getClientIp(request, context.ingress) ?? undefined;
   return hashClientIpBuckets(ip, {
     secret: context.secret,
     previousSecret: context.previousSecret,
@@ -52,7 +46,7 @@ export async function resolutionClientBuckets(
 
 export async function resolutionClientBucket(
   request: Request,
-  context: TrustedClientContext,
+  context: TrustedClientContext = {},
 ): Promise<string> {
   return (await resolutionClientBuckets(request, context))[0];
 }

@@ -7,7 +7,7 @@
 //
 // La clave privada nunca se persiste en claro -- se cifra con AES-GCM
 // usando una clave de cifrado que vive FUERA de esta base de datos
-// (PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY, env var, nunca en schema.sql).
+// (opción encryptionKey, nunca en schema.sql).
 //
 // DECISION (v0.0.9.30): la clave de cifrado NO se deriva de la contrasena
 // del admin. Se evaluo y se descarto: en un reset por email el servidor no
@@ -92,13 +92,15 @@ export interface SiteIdentityStore {
 
 export const SITE_IDENTITY_NOT_FOUND = "site_identity_not_found";
 
-const ENCRYPTION_KEY_ENV = "PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY";
+export interface SiteIdentityStoreOptions {
+  /** Base64-encoded AES key, supplied by the host. */
+  encryptionKey?: string;
+}
 
-async function getEncryptionKey(env: Record<string, any>): Promise<CryptoKey> {
-  const rawKey = env[ENCRYPTION_KEY_ENV];
+async function getEncryptionKey({ encryptionKey: rawKey }: SiteIdentityStoreOptions): Promise<CryptoKey> {
   if (!rawKey) {
     throw new Error(
-      `${ENCRYPTION_KEY_ENV} no esta configurada -- requerida para cifrar la clave privada de site_identity. Generar con: openssl rand -base64 32`
+      "encryptionKey is required for site identity private-key storage"
     );
   }
   const keyBytes = Uint8Array.from(atob(rawKey), (c) => c.charCodeAt(0));
@@ -107,9 +109,9 @@ async function getEncryptionKey(env: Record<string, any>): Promise<CryptoKey> {
 
 async function encryptPrivateKey(
   privateKeyJwk: JsonWebKey,
-  env: Record<string, any>
+  options: SiteIdentityStoreOptions
 ): Promise<{ ciphertext: string; iv: string }> {
-  const key = await getEncryptionKey(env);
+  const key = await getEncryptionKey(options);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const plaintext = new TextEncoder().encode(JSON.stringify(privateKeyJwk));
   const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
@@ -122,9 +124,9 @@ async function encryptPrivateKey(
 async function decryptPrivateKey(
   ciphertextBase64: string,
   ivBase64: string,
-  env: Record<string, any>
+  options: SiteIdentityStoreOptions
 ): Promise<JsonWebKey> {
-  const key = await getEncryptionKey(env);
+  const key = await getEncryptionKey(options);
   const ciphertext = Uint8Array.from(atob(ciphertextBase64), (c) => c.charCodeAt(0));
   const iv = Uint8Array.from(atob(ivBase64), (c) => c.charCodeAt(0));
   const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
@@ -226,7 +228,7 @@ function isConstraintError(err: unknown): boolean {
 export class SqlSiteIdentityStore implements SiteIdentityStore {
   private schemaReady: Promise<void> | null = null;
 
-  constructor(private readonly sql: SqlAdapter, private readonly env: Record<string, any>) {}
+  constructor(private readonly sql: SqlAdapter, private readonly options: SiteIdentityStoreOptions) {}
 
   private ensureSchema(): Promise<void> {
     if (!this.schemaReady) {
@@ -312,7 +314,7 @@ export class SqlSiteIdentityStore implements SiteIdentityStore {
 
   async create(siteId: string, keyPair: ApwKeyPair, createdBy: string): Promise<SiteIdentityRecord> {
     await this.ensureSchema();
-    const { ciphertext, iv } = await encryptPrivateKey(keyPair.privateKeyJwk, this.env);
+    const { ciphertext, iv } = await encryptPrivateKey(keyPair.privateKeyJwk, this.options);
     const kid = await jwkThumbprint(keyPair.publicKeyJwk);
     const createdAt = new Date().toISOString();
     await this.sql.atomic([
@@ -330,7 +332,7 @@ export class SqlSiteIdentityStore implements SiteIdentityStore {
     const existing = await this.sql.first("SELECT site_id FROM site_identity WHERE site_id = ?", [siteId]);
     if (!existing) throw new Error(SITE_IDENTITY_NOT_FOUND);
 
-    const { ciphertext, iv } = await encryptPrivateKey(keyPair.privateKeyJwk, this.env);
+    const { ciphertext, iv } = await encryptPrivateKey(keyPair.privateKeyJwk, this.options);
     const kid = await jwkThumbprint(keyPair.publicKeyJwk);
     const sequence = (await this.maxKeySequence(siteId)) + 1;
     const now = new Date().toISOString();
@@ -352,7 +354,7 @@ export class SqlSiteIdentityStore implements SiteIdentityStore {
       [siteId]
     );
     if (!row) return null;
-    return decryptPrivateKey(row.private_key_jwk_encrypted, row.private_key_encryption_iv, this.env);
+    return decryptPrivateKey(row.private_key_jwk_encrypted, row.private_key_encryption_iv, this.options);
   }
 
   async listKeys(siteId: string): Promise<SiteIdentityKeyRecord[]> {
@@ -375,20 +377,20 @@ export class SqlSiteIdentityStore implements SiteIdentityStore {
       kid: row.kid,
       keyId: row.key_id,
       publicKeyJwk: JSON.parse(row.public_key_jwk),
-      privateKeyJwk: await decryptPrivateKey(row.private_key_encrypted, row.private_key_encryption_iv, this.env),
+      privateKeyJwk: await decryptPrivateKey(row.private_key_encrypted, row.private_key_encryption_iv, this.options),
     };
   }
 }
 
 export class D1SiteIdentityStore extends SqlSiteIdentityStore {
-  constructor(db: D1Database, env: Record<string, any>) {
-    super(new D1Adapter(db), env);
+  constructor(db: D1Database, options: SiteIdentityStoreOptions = {}) {
+    super(new D1Adapter(db), options);
   }
 }
 
 export class SqliteSiteIdentityStore extends SqlSiteIdentityStore {
-  constructor(db: { prepare: (sql: string) => any }, env: Record<string, any>) {
-    super(new SqliteAdapter(db), env);
+  constructor(db: { prepare: (sql: string) => any }, options: SiteIdentityStoreOptions = {}) {
+    super(new SqliteAdapter(db), options);
   }
 }
 
@@ -401,14 +403,14 @@ export class InMemorySiteIdentityStore implements SiteIdentityStore {
   private records = new Map<string, SiteIdentityRecord>();
   private keys = new Map<string, MemoryKey[]>();
 
-  constructor(private readonly env: Record<string, any>) {}
+  constructor(private readonly options: SiteIdentityStoreOptions = {}) {}
 
   async get(siteId: string): Promise<SiteIdentityRecord | null> {
     return this.records.get(siteId) ?? null;
   }
 
   private async newKey(siteId: string, keyPair: ApwKeyPair, validFrom: string, sequence: number): Promise<MemoryKey> {
-    const encrypted = await encryptPrivateKey(keyPair.privateKeyJwk, this.env);
+    const encrypted = await encryptPrivateKey(keyPair.privateKeyJwk, this.options);
     return {
       record: {
         kid: await jwkThumbprint(keyPair.publicKeyJwk),
@@ -469,7 +471,7 @@ export class InMemorySiteIdentityStore implements SiteIdentityStore {
   async getDecryptedPrivateKey(siteId: string): Promise<JsonWebKey | null> {
     const active = this.keys.get(siteId)?.find((k) => k.record.validTo === null);
     if (!active?.encrypted) return null;
-    return decryptPrivateKey(active.encrypted.ciphertext, active.encrypted.iv, this.env);
+    return decryptPrivateKey(active.encrypted.ciphertext, active.encrypted.iv, this.options);
   }
 
   async listKeys(siteId: string): Promise<SiteIdentityKeyRecord[]> {
@@ -483,7 +485,7 @@ export class InMemorySiteIdentityStore implements SiteIdentityStore {
       kid: active.record.kid,
       keyId: active.record.keyId,
       publicKeyJwk: active.record.publicKeyJwk,
-      privateKeyJwk: await decryptPrivateKey(active.encrypted.ciphertext, active.encrypted.iv, this.env),
+      privateKeyJwk: await decryptPrivateKey(active.encrypted.ciphertext, active.encrypted.iv, this.options),
     };
   }
 }
