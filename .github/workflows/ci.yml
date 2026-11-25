@@ -47,3 +47,9 @@ jobs:
 
       - name: Check published declarations in a strict NodeNext consumer
         run: npm run smoke:types
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.6
+      - name: Verify Node, Workers and Deno runtime parity
+        run: npm run smoke:runtimes -- --require-deno
