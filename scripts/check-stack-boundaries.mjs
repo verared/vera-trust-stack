@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-// Apache-2.0. Enforces Vera Trust Stack boundaries: licenses, DAG, zero deep src/, zero Portaless refs, Web-API purity.
+// Apache-2.0. Enforces package DAG, host neutrality, Web-API purity and the exact spec pin.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { isBuiltin } from 'node:module';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const failures = [];
@@ -25,7 +28,7 @@ function walk(dir, out = []) {
     if (['node_modules', 'dist', '.git', '__tests__'].includes(e.name)) continue;
     const full = resolve(dir, e.name);
     if (e.isDirectory()) walk(full, out);
-    else if (/\.(ts|mts|js|mjs)$/.test(e.name) && !e.name.endsWith('.test.ts')) out.push(full);
+    else if (/\.(?:[cm]?[jt]sx?|json|map)$/.test(e.name) && !/\.test\.[cm]?[jt]sx?$/.test(e.name)) out.push(full);
   }
   return out;
 }
@@ -36,7 +39,27 @@ if (rootPkg.license !== 'Apache-2.0') fail(`Root package.json license must be Ap
 if (!existsSync(resolve(root, 'LICENSE'))) fail('Missing root LICENSE file');
 
 const adj = new Map([...EXPECTED_PACKAGES.keys()].map((d) => [d, new Set()]));
-const importRe = /(?:from\s+['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)|require\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
+const forbiddenHost = /portaless|sqlite-driver|better-sqlite3/i;
+const isNodeImport = (specifier) => specifier.startsWith('node:') || isBuiltin(specifier);
+
+function importsIn(file, text) {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const imports = [];
+  function visit(node) {
+    let specifier;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) specifier = node.moduleSpecifier;
+    if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) specifier = node.argument.literal;
+    if (ts.isExternalModuleReference(node)) specifier = node.expression;
+    if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword
+      || (ts.isIdentifier(node.expression) && ['require', '__require'].includes(node.expression.text)))) {
+      specifier = node.arguments[0];
+    }
+    if (specifier && ts.isStringLiteralLike(specifier)) imports.push(specifier.text);
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return imports;
+}
 
 for (const [dir, meta] of EXPECTED_PACKAGES) {
   const pkgDir = resolve(root, 'packages', dir);
@@ -51,26 +74,20 @@ for (const [dir, meta] of EXPECTED_PACKAGES) {
   if (pkg.name !== meta.name) fail(`packages/${dir}/package.json name must be ${meta.name}, got ${pkg.name}`);
   if (pkg.license !== 'Apache-2.0') fail(`packages/${dir}/package.json license must be Apache-2.0, got ${pkg.license}`);
 
-  for (const dep of Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies })) {
-    if (dep.startsWith('@portaless/') || dep === 'better-sqlite3' || dep === 'sqlite-driver') {
-      fail(`Forbidden dependency ${dep} in packages/${dir}/package.json`);
-    }
+  if (forbiddenHost.test(readFileSync(pkgJsonPath, 'utf8'))) {
+    fail(`Forbidden host reference in packages/${dir}/package.json`);
   }
 
   const files = walk(resolve(pkgDir, 'src'));
   for (const f of files) {
     const rel = relative(root, f).replaceAll('\\', '/');
     const text = readFileSync(f, 'utf8');
-    if (/@portaless\/|geroiloyola\/portaless|sqlite-driver|better-sqlite3/.test(text)) {
-      fail(`Forbidden Portaless/SQLite reference in ${rel}`);
-    }
-    for (const m of text.matchAll(importRe)) {
-      const spec = m[1] || m[2] || m[3] || '';
-      if (!spec) continue;
+    if (forbiddenHost.test(text)) fail(`Forbidden host reference in ${rel}`);
+    for (const spec of importsIn(f, text)) {
       if (spec.includes('/packages/') || /(?:\.\.\/)+[^/]+\/src\//.test(spec)) {
         fail(`Deep packages/*/src/ import in ${rel}: ${spec}`);
       }
-      if (dir === 'net' && spec.startsWith('node:')) {
+      if (dir === 'net' && isNodeImport(spec)) {
         fail(`Forbidden node:* import in Web-API pure @verared/net (${rel}): ${spec}`);
       }
       const pkgBase = spec.startsWith('@verared/') ? spec.split('/').slice(0, 2).join('/') : null;
@@ -84,16 +101,38 @@ for (const [dir, meta] of EXPECTED_PACKAGES) {
       }
     }
   }
+  const distDir = resolve(pkgDir, 'dist');
+  if (!existsSync(distDir)) fail(`Missing packages/${dir}/dist; run npm run build first`);
+  else {
+    for (const file of walk(distDir)) {
+      if (forbiddenHost.test(readFileSync(file, 'utf8'))) {
+        fail(`Forbidden host reference in ${relative(root, file)}`);
+      }
+    }
+  }
 }
 
-// 2. Check Web-API purity on compiled dist/standalone.js & net/dist/index.js if present
-for (const rel of ['packages/net/dist/index.js', 'packages/apw-resolver/dist/standalone.js']) {
-  const full = resolve(root, rel);
-  if (existsSync(full)) {
-    const text = readFileSync(full, 'utf8');
-    if (/(?:from|import)\s*['"]node:/.test(text)) {
-      fail(`Forbidden node:* import in built artifact ${rel}`);
+// Check each deployable graph, resolving workspace references to sources for the source checks.
+for (const rel of ['packages/net/src/index.ts', 'packages/apw-resolver/src/standalone.ts',
+  'packages/net/dist/index.js', 'packages/apw-resolver/dist/standalone.js']) {
+  try {
+    const graph = await build({
+      absWorkingDir: root, entryPoints: [rel], format: 'esm', bundle: true,
+      platform: 'neutral', mainFields: ['module', 'main'], write: false,
+      logLevel: 'silent', metafile: true,
+      alias: rel.includes('/src/') ? { '@verared/net': './packages/net/src/index.ts' } : {},
+      plugins: [{ name: 'check-node-imports', setup(builder) {
+        builder.onResolve({ filter: /.*/ }, ({ path }) => isNodeImport(path) ? { path, external: true } : undefined);
+      } }],
+    });
+    for (const file of Object.keys(graph.metafile.inputs)) {
+      const path = resolve(root, file);
+      for (const spec of importsIn(path, readFileSync(path, 'utf8'))) {
+        if (isNodeImport(spec)) fail(`Forbidden Node import ${spec} in ${file} (reachable from ${rel})`);
+      }
     }
+  } catch (error) {
+    fail(`Cannot check Web-API graph ${rel}: ${error.message}`);
   }
 }
 
@@ -120,11 +159,20 @@ if (!existsSync(pinPath)) {
   fail('Missing SPEC-PIN.json');
 } else {
   const pin = JSON.parse(readFileSync(pinPath, 'utf8'));
-  if (pin.digests?.corpusDigest !== 'wNQ9gG2BPs8JO1wPsiPgoz265juDT-TCjuGMbTzSYXA') {
-    fail('SPEC-PIN.json corpusDigest mismatch');
+  const expectedDigests = {
+    schemaBundleDigest: '2-OWDPkYHe3A_DYyUbSsE5t1jFRyNxNM6DnVml-Tp7w',
+    originalCorpusDigest: 'fbc9_xl0gKJlfH7JCslUsoOgHoQNrFuVRGdyPKEme0U',
+    previousCorpusDigest: 'wpevxHbAUDyL5OVybTC2ANQ8ISby1hkCefwUgfSNeVg',
+    corpusDigest: 'wNQ9gG2BPs8JO1wPsiPgoz265juDT-TCjuGMbTzSYXA',
+    numericExtensionDigest: 'RLmrcBc3SjFN1Mephzw6y7h3N5_mzKN9oLxLRkTZH1g',
+  };
+  if (pin.commit !== '7787966a38fb08ceb509df295ee814ba93af4dec') fail('SPEC-PIN.json commit mismatch');
+  if (pin.tarball?.sha256 !== 'a7f1580d3690a4cfe1b33b5267c8a98cc199dbd183579ab6b42c0f4418a18ef5') {
+    fail('SPEC-PIN.json tarball SHA-256 mismatch');
   }
-  if (!/^[a-f0-9]{40}$/.test(pin.commit || '')) {
-    fail('SPEC-PIN.json commit must be a 40-char SHA');
+  if (Object.keys(pin.digests ?? {}).length !== Object.keys(expectedDigests).length) fail('SPEC-PIN.json digest set mismatch');
+  for (const [key, expected] of Object.entries(expectedDigests)) {
+    if (pin.digests?.[key] !== expected) fail(`SPEC-PIN.json ${key} mismatch`);
   }
 }
 
@@ -134,4 +182,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[check-stack-boundaries] OK — 7 Apache-2.0 packages, 0 cycles, 0 deep src/ imports, 0 Portaless/SQLite refs, SPEC-PIN verified.');
+console.log('[check-stack-boundaries] OK — 7 Apache-2.0 packages, DAG, host neutrality, Web-API graphs, exact SPEC-PIN.');
