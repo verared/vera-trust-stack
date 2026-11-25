@@ -1,0 +1,86 @@
+name: Vera Trust Stack Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-pack:
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate tag and workspace versions
+        id: version
+        run: node scripts/release-version.mjs "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+      - name: Read pinned specification commit
+        id: spec
+        run: node -e 'console.log("commit=" + require("./SPEC-PIN.json").commit)' >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: verared/vera-trust-spec
+          ref: ${{ steps.spec.outputs.commit }}
+          path: .spec-pin-checkout
+          persist-credentials: false
+      - name: Verify pinned specification snapshot and published tarball
+        run: |
+          test "$(git -C .spec-pin-checkout rev-parse HEAD)" = "$(node -p 'require("./SPEC-PIN.json").commit')"
+          node .spec-pin-checkout/scripts/verify-spec.mjs
+          url=$(node -p 'require("./SPEC-PIN.json").tarball.releaseUrl')
+          sha=$(node -p 'require("./SPEC-PIN.json").tarball.sha256')
+          curl --fail --silent --show-error --location "$url" --output "$RUNNER_TEMP/spec.tgz"
+          printf '%s  %s\n' "$sha" "$RUNNER_TEMP/spec.tgz" | sha256sum -c --strict -
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm run check:boundaries
+      - run: npm test -- --maxWorkers=2
+        env:
+          VERARED_SPEC_DIR: ${{ github.workspace }}/.spec-pin-checkout/spec
+      - run: npm run smoke:tarballs
+      - run: npm run smoke:types
+      - name: Pack and verify exactly seven tarballs
+        shell: bash
+        run: |
+          npm run pack:release -- "$RUNNER_TEMP/release-assets"
+          cd "$RUNNER_TEMP/release-assets"
+          tarballs=( *.tgz )
+          test "${#tarballs[@]}" = 7
+          test "$(wc -l < SHA256SUMS)" = 7
+          diff <(printf '%s\n' "${tarballs[@]}" | sort) <(cut -d ' ' -f 3 SHA256SUMS | sort)
+          sha256sum -c --strict SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: ${{ runner.temp }}/release-assets/
+          if-no-files-found: error
+
+  publish:
+    needs: verify-and-pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release-assets
+      - name: Publish verified GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PRERELEASE: ${{ needs.verify-and-pack.outputs.prerelease }}
+        run: |
+          sha256sum -c --strict SHA256SUMS
+          options=(--verify-tag --generate-notes)
+          if [[ "$PRERELEASE" == true ]]; then options+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" "${options[@]}" ./*.tgz ./SHA256SUMS
+        working-directory: release-assets

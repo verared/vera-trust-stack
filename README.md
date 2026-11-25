@@ -6,6 +6,7 @@ Open-source TypeScript/ESM reference implementation of the **Vera Trust Stack** 
 - **License:** [Apache-2.0](./LICENSE) (every package includes its own `LICENSE` file)
 - **Pinned Specification:** [`SPEC-PIN.json`](./SPEC-PIN.json) → [`verared/vera-trust-spec`](https://github.com/verared/vera-trust-spec) (`v0.1.0-draft.1`, commit `7787966a38fb08ceb509df295ee814ba93af4dec`, G1 corpus digest `wNQ9gG2BPs8JO1wPsiPgoz265juDT-TCjuGMbTzSYXA`)
 - **Roadmap:** [Implementation and compatibility milestones](./ROADMAP.md)
+- **Migration:** [From `v0.1.0-alpha.1` to `v0.1.0-alpha.2`](./docs/MIGRATION-v0.1.0-alpha.2.md)
 
 ## What this repo is / What this repo is not
 
@@ -26,7 +27,7 @@ The three `geroiloyola/portaless*` repositories are listed only as a non-normati
 
 ---
 
-## Packages (`0.1.0-alpha.1`)
+## Packages (`0.1.0-alpha.2`)
 
 | Layer | Package | Directory | Subpath Exports | Runtime |
 |---|---|---|---|---|
@@ -44,7 +45,7 @@ All 7 packages compile to `dist/` (ESM `.js` + TypeScript `.d.ts`) without CMS o
 
 ## Consuming via GitHub Release Tarballs (No Registry Token Required)
 
-During Wave 2, `@verared/*` packages are distributed as immutable `.tgz` tarballs attached to GitHub Releases. Any external consumer can install them via `npm ci` or Docker without npm registry authentication using the `dependencies` + `overrides` pattern:
+During Wave 2, `@verared/*` packages are distributed as `.tgz` tarballs attached to GitHub Releases. This example uses the published `v0.1.0-alpha.1` assets. When `v0.1.0-alpha.2` is published, update all seven URLs together and verify the corresponding `SHA256SUMS` before installing:
 
 ```json
 {

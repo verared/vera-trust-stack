@@ -1,4 +1,5 @@
 // Public subpath barrel for @verared/apw/did-apw
+export type { D1Database } from "../d1-database.js";
 export * from "./atproto-links-store";
 export * from "./attestation";
 export * from "./attestation-log-store";

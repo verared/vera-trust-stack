@@ -1,6 +1,6 @@
 {
   "name": "vera-trust-stack",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Vera Trust Stack monorepo: APW, Local Trust Protocol, SVRI/HSVR, neutral Trust Layer, Cloud Images, and ATProto Identity (Apache-2.0).",
   "private": true,
   "type": "module",

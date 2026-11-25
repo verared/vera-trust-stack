@@ -2,7 +2,7 @@
 // Apache-2.0. Packs all 7 @verared/* tarballs and verifies external consumer installation & ESM imports
 // without querying registry.npmjs.org for any @verared/* package.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -142,11 +142,12 @@ try {
       throw new Error('Smoke imports must match all 17 declared entrypoints');
     }
     writeFileSync(join(consumerDir, 'smoke.mts'), `${smokeScript}\ntype AssertNever<T extends never> = T;\n${typeAssertions.join('\n')}\n`, 'utf8');
+    copyFileSync(join(root, 'scripts/fixtures/gatekeeper.mts'), join(consumerDir, 'gatekeeper.mts'));
     execFileSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'),
-      '--noEmit', '--strict', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2022', 'smoke.mts'], {
+      '--noEmit', '--strict', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--target', 'ES2022', 'smoke.mts', 'gatekeeper.mts'], {
       cwd: consumerDir, stdio: 'inherit',
     });
-    console.log(`[smoke-types] Verified all ${names.size} public entrypoints with strict NodeNext resolution.`);
+    console.log(`[smoke-types] Verified all ${names.size} public entrypoints and the Gatekeeper consumer with strict NodeNext resolution.`);
   }
 } finally {
   if (existsSync(workDir)) rmSync(workDir, { recursive: true, force: true });
