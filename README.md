@@ -112,4 +112,9 @@ Use the root `@verared/trust-layer` verifier with a trusted ingress resolver and
 
 See the [migration and wiring guide](./docs/MIGRATION-v0.1.0-alpha.2.md) for exact signatures, fail-closed behavior and the B3 decision boundary.
 
+## Release and integration status
+
+- **Shipped:** [alpha.2 package and release evidence](./ROADMAP.md#phase-1--package-extraction-boundaries-and-release), [signed-reader security](./ROADMAP.md#phase-2--trust-layer-and-network-security) and [bounded identity and reputation scope](./ROADMAP.md#phase-4--local-trust-protocol-and-reputation).
+- **To demonstrate before broader claims:** [real Gatekeeper and B3 coverage](./ROADMAP.md#phase-6--gatekeeper-in-real-consumers-and-b3), [registry installation](./ROADMAP.md#phase-7--npm-registry-publication), [runtime parity and CLI](./ROADMAP.md#phase-8--runtime-parity-and-cli) and [independent ML-DSA review](./ROADMAP.md#phase-9--independent-security-and-ml-dsa-review). The Node 24 fixtures do not establish those results.
+
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for DCO (`Signed-off-by`) requirements.
