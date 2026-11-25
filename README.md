@@ -114,6 +114,8 @@ Use the root `@verared/trust-layer` verifier with a trusted ingress resolver and
 
 See the [migration and wiring guide](./docs/MIGRATION-v0.1.0-alpha.2.md) for exact signatures, fail-closed behavior and the B3 decision boundary.
 
+The [accepted B3 ADR](./docs/decisions/ADR-0003-b3-unsigned-readers.md) describes the admission API added after alpha.2. The tag workflow can also publish the verified archives to npm in dependency order and run an isolated registry smoke when `NPM_TOKEN` is configured. To validate packaging and order locally, run `node scripts/publish-npm.mjs --dry-run`.
+
 ## Release and integration status
 
 - **Shipped:** [alpha.2 package and release evidence](./ROADMAP.md#phase-1--package-extraction-boundaries-and-release), [signed-reader security](./ROADMAP.md#phase-2--trust-layer-and-network-security) and [bounded identity and reputation scope](./ROADMAP.md#phase-4--local-trust-protocol-and-reputation).

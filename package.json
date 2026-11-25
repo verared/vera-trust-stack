@@ -23,6 +23,7 @@
     "smoke:tarballs": "node scripts/smoke-tarballs.mjs",
     "smoke:types": "node scripts/smoke-tarballs.mjs --types",
     "smoke:runtimes": "node scripts/smoke-runtimes.mjs",
+    "smoke:npm": "node scripts/smoke-npm.mjs",
     "pack:release": "node scripts/pack-release.mjs"
   },
   "devDependencies": {
