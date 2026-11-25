@@ -24,6 +24,7 @@ import {
   DIRECTORY_FETCH_COLD_MAX,
 } from "../../packages/trust-layer/src/webbotauth/verify";
 import { buildSignatureBase, parseSignatureInput } from "../../packages/trust-layer/src/webbotauth/rfc9421";
+import { ResolutionBudget, RESOLUTION_BUDGET_PROPOSAL, resolutionClientBuckets } from "../../packages/trust-layer/src/net/resolution-budget";
 
 const OPERATOR_ORIGIN = "https://agent-operator.example.com";
 const KEY_ID = "test-key-1";
@@ -160,11 +161,42 @@ describe("verifyWebBotAuthRequest (middleware)", () => {
     const request = await buildSignedRequest({ privateKey, keyId: KEY_ID });
     const directoryFetcher = vi.fn(async () => ({ ok: true, text: '{"keys":[]}' }));
     const result = await verifyWebBotAuthRequest(request, {
-      resolutionBudget: { secret: "synthetic-budget-secret-for-tests" },
+      resolutionBudget: { secret: "synthetic-budget-secret-for-tests", budget: new ResolutionBudget() },
       directoryFetcher,
     });
     expect(result).toMatchObject({ verified: false, status: 503, reason: "resolution_budget_misconfigured" });
     expect(directoryFetcher).not.toHaveBeenCalled();
+  });
+
+  it.each(["host", "verifier"] as const)("shares the same window quota when %s spends it first", async (first) => {
+    const { privateKey, publicKeyX } = await generateKeyPair();
+    const request = await buildSignedRequest({ privateKey, keyId: KEY_ID });
+    const ingress = { resolveClientIp: () => "192.0.2.1" };
+    const secret = "synthetic-budget-secret-for-tests";
+    const budget = new ResolutionBudget({
+      ...RESOLUTION_BUDGET_PROPOSAL,
+      client: { ...RESOLUTION_BUDGET_PROPOSAL.client, attempts: 1 },
+    }, () => 0);
+    const clientBucket = await resolutionClientBuckets(request, { ingress, secret });
+    const fetchIdentity = vi.fn(async () => ({ ok: true, text: "{}" }));
+    const directoryFetcher = vi.fn(async () => ({
+      ok: true,
+      text: JSON.stringify({ keys: [{ kid: KEY_ID, kty: "OKP", crv: "Ed25519", x: publicKeyX }] }),
+    }));
+    const fromHost = () => budget.fetch({ clientBucket, directoryOrigin: OPERATOR_ORIGIN, stage: "did" },
+      `${OPERATOR_ORIGIN}/.well-known/did.json`, fetchIdentity);
+    const fromVerifier = () => verifyWebBotAuthRequest(request, {
+      directoryFetcher, resolutionBudget: { ingress, secret, budget },
+    });
+    if (first === "host") {
+      expect(await fromHost()).toMatchObject({ ok: true });
+      expect(await fromVerifier()).toMatchObject({ verified: false, status: 429, reason: "client_budget_exhausted" });
+      expect(directoryFetcher).not.toHaveBeenCalled();
+    } else {
+      expect(await fromVerifier()).toMatchObject({ verified: true });
+      expect(await fromHost()).toMatchObject({ ok: false, status: 429, error: "client_budget_exhausted" });
+      expect(fetchIdentity).not.toHaveBeenCalled();
+    }
   });
 
   it("interoperabilidad: verifica una firma hecha por la libreria web-bot-auth", async () => {

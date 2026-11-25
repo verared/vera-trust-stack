@@ -99,6 +99,8 @@ export interface VerifyWebBotAuthOptions {
     secret: string;
     previousSecret?: string;
     ingress?: import("../net/client-ip").TrustedIngress;
+    /** Optional host-owned budget shared with other outbound resolution stages. */
+    budget?: ResolutionBudget;
   };
   /** Solo para tests o runtimes que ya inyectan un fetcher endurecido. */
   directoryFetcher?: SafeFetcher;
@@ -141,14 +143,14 @@ export async function verifyWebBotAuthRequest(
 
   let budgetContext: { budget: ResolutionBudget; clientBucket: string | readonly string[] } | undefined;
   if (options?.resolutionBudget) {
-    const { secret, previousSecret, ingress } = options.resolutionBudget;
+    const { secret, previousSecret, ingress, budget = resolutionBudget } = options.resolutionBudget;
     if (typeof secret !== "string" || secret.length < 32
       || (previousSecret !== undefined && (typeof previousSecret !== "string" || previousSecret.length < 32))
       || typeof ingress?.resolveClientIp !== "function") {
       return { verified: false, reason: "resolution_budget_misconfigured", failureType: "unavailable", retryAfterSeconds: 1, status: 503 };
     }
     const clientBucket = await resolutionClientBuckets(request, { ingress, secret, previousSecret });
-    budgetContext = { budget: resolutionBudget, clientBucket };
+    budgetContext = { budget, clientBucket };
   }
   const resolved = await directories.resolve(operatorOrigin, options?.directoryFetcher,
     options?.reservedOrigins, budgetContext);
