@@ -5,6 +5,24 @@ Open-source TypeScript/ESM reference implementation of the **Vera Trust Stack** 
 - **Author:** Gerardo Loyola
 - **License:** [Apache-2.0](./LICENSE) (every package includes its own `LICENSE` file)
 - **Pinned Specification:** [`SPEC-PIN.json`](./SPEC-PIN.json) → [`verared/vera-trust-spec`](https://github.com/verared/vera-trust-spec) (`v0.1.0-draft.1`, commit `7787966a38fb08ceb509df295ee814ba93af4dec`, G1 corpus digest `wNQ9gG2BPs8JO1wPsiPgoz265juDT-TCjuGMbTzSYXA`)
+- **Roadmap:** [Implementation and compatibility milestones](./ROADMAP.md)
+
+## What this repo is / What this repo is not
+
+- **Is:** A host-neutral TypeScript/ESM reference implementation with reusable packages and conformance tests against the pinned specification.
+- **Is not:** The normative specification, a host application, or a dependency of independent implementations.
+
+### Ecosystem and licenses
+
+The three `geroiloyola/portaless*` repositories are listed only as a non-normative reference ecosystem. Portaless is the first consumer; neither Verared repository depends on or is coupled to these three repositories.
+
+| Repository | License | Responsibility |
+|---|---|---|
+| [`verared/vera-trust-spec`](https://github.com/verared/vera-trust-spec) | CC BY 4.0 | Specification, schemas, and test vectors |
+| [`verared/vera-trust-stack`](https://github.com/verared/vera-trust-stack) | Apache-2.0 | TypeScript reference implementation |
+| [`geroiloyola/portaless-plugin-sdk`](https://github.com/geroiloyola/portaless-plugin-sdk) | MIT | Public contract for plugin authors |
+| [`geroiloyola/portaless-templates`](https://github.com/geroiloyola/portaless-templates) | CC0-1.0 | Reusable templates |
+| [`geroiloyola/portaless`](https://github.com/geroiloyola/portaless) | AGPL-3.0-or-later | Host application and its integrations |
 
 ---
 
