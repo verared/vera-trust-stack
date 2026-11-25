@@ -1,11 +1,12 @@
 # Vera Trust Stack (`@verared/*`)
 
-Open-source TypeScript/ESM reference implementation of the **Vera Trust Stack** — **APW**, **Local Trust Protocol (LTP)**, **SVRI/HSVR**, neutral **Trust Layer**, **Cloud Images**, and **ATProto Identity** — published under the **Apache License 2.0**.
+Open-source TypeScript/ESM reference implementation of the **Vera Trust Stack** — **APW**, **Local Trust Protocol**, **SVRI/HSVR**, neutral **Trust Layer**, **Cloud Images**, and **ATProto Identity** — published under the **Apache License 2.0**.
 
 - **Author:** Gerardo Loyola
 - **License:** [Apache-2.0](./LICENSE) (every package includes its own `LICENSE` file)
 - **Pinned Specification:** [`SPEC-PIN.json`](./SPEC-PIN.json) → [`verared/vera-trust-spec`](https://github.com/verared/vera-trust-spec) (`v0.1.0-draft.1`, commit `7787966a38fb08ceb509df295ee814ba93af4dec`, G1 corpus digest `wNQ9gG2BPs8JO1wPsiPgoz265juDT-TCjuGMbTzSYXA`)
 - **Roadmap:** [Implementation and compatibility milestones](./ROADMAP.md)
+- **Vision:** [Portable identity and independent verification](https://github.com/verared/vera-trust-spec/blob/main/VISION.md)
 - **Migration:** [From `v0.1.0-alpha.1` to `v0.1.0-alpha.2`](./docs/MIGRATION-v0.1.0-alpha.2.md)
 
 ## What this repo is / What this repo is not
@@ -27,36 +28,56 @@ The three `geroiloyola/portaless*` repositories are listed only as a non-normati
 
 ---
 
+## How the layers fit
+
+APW resolves domain-backed identities and verifies signed artifacts and history. Local Trust Protocol acquires bounded proof material and checks it against the caller's policy. SVRI projects admitted evidence with its provenance and uncertainty; HSVR reconstructs that assessment over time. A Witness Index helps find verifiable observations, and a `community attester` provides attributable signed evidence. Neither witness discovery nor a score confers access.
+
+Host applications supply ingress, persistence, policy and settlement adapters. Web Bot Auth can authenticate a signed automated reader; content policies express `allow`, `block` or `charge` for AI input. Search and training preferences are cooperative signals. The libraries provide verification and policy primitives; the host decides how to enforce them and expose public or governed responses.
+
 ## Packages (`0.1.0-alpha.2`)
 
-| Layer | Package | Directory | Subpath Exports | Runtime |
+| Layer | Package | Public entrypoints | Purpose | Runtime |
 |---|---|---|---|---|
-| **L0-net** | `@verared/net` | [`packages/net`](./packages/net) | `.` | 100% Web-API pure (`0` `node:*`) |
-| **L1** | `@verared/apw` | [`packages/apw-resolver`](./packages/apw-resolver) | `.` (Web-API pure), `./full`, `./resolver`, `./did-apw`, `./scoring`, `./federation` | Web-API / Node 24 |
-| **L1** | `@verared/local-trust` | [`packages/ltp-engine`](./packages/ltp-engine) | `.` | Node 24 |
-| **L1** | `@verared/reputation` | [`packages/ltp-reputation`](./packages/ltp-reputation) | `.` | Web-API / Node 24 |
-| **L2** | `@verared/trust-layer` | [`packages/trust-layer`](./packages/trust-layer) | `.`, `./site-trust`, `./policy`, `./billing`, `./ledger`, `./net` | Web-API / Node 24 |
-| **L2** | `@verared/cloud-images` | [`packages/cloud-images`](./packages/cloud-images) | `.` | Web-API / Node 24 |
-| **L2** | `@verared/identity-atproto` | [`packages/identity-atproto`](./packages/identity-atproto) | `.` | Web-API / Node 24 |
+| **L0-net** | [`@verared/net`](./packages/net) | `.` | Bounded fetch, trusted-ingress helpers and egress budgets | Web APIs; no `node:*` imports |
+| **L1** | [`@verared/apw`](./packages/apw-resolver) | `.`, `./full`, `./resolver`, `./did-apw`, `./scoring`, `./federation` | Identity, signed history, Witness Index, scoring and federated artifacts | Node 24 baseline; `.` uses Web APIs without `node:*` imports |
+| **L1** | [`@verared/local-trust`](./packages/ltp-engine) | `.` | Bounded acquisition and deterministic verification of identity proofs | Node 24 |
+| **L1** | [`@verared/reputation`](./packages/ltp-reputation) | `.` | Deterministic SVRI projection of admitted evidence | Node 24 baseline |
+| **L2** | [`@verared/trust-layer`](./packages/trust-layer) | `.`, `./site-trust`, `./policy`, `./billing`, `./ledger`, `./net` | Web Bot Auth, policy, budgets, usage and settlement interfaces | Node 24 baseline |
+| **L2** | [`@verared/cloud-images`](./packages/cloud-images) | `.` | Signed image sidecars and verification | Node 24 baseline |
+| **L2** | [`@verared/identity-atproto`](./packages/identity-atproto) | `.` | AT Protocol identity resolution and links to APW evidence | Node 24 baseline |
 
-All 7 packages compile to `dist/` (ESM `.js` + TypeScript `.d.ts`) without CMS or database-driver dependencies. Hosts supply storage via TypeScript ports and can use the `InMemory*` stores for local use.
+All **7 packages and 17 public entrypoints** ship ESM and TypeScript declarations checked with strict `NodeNext`. The Web-API import boundary is not a claim of deployment parity across Workers and Deno; see the [roadmap](./ROADMAP.md).
 
 ---
 
 ## Consuming via GitHub Release Tarballs (No Registry Token Required)
 
-During Wave 2, `@verared/*` packages are distributed as `.tgz` tarballs attached to GitHub Releases. This example uses the published `v0.1.0-alpha.1` assets. When `v0.1.0-alpha.2` is published, update all seven URLs together and verify the corresponding `SHA256SUMS` before installing:
+Use Node 24 and take all seven archives from the same [published `v0.1.0-alpha.2` prerelease](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-alpha.2). To verify and install exactly the bytes you checked, run this in an empty consumer directory:
+
+```bash
+set -e
+release=https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.2
+mkdir vendor
+curl -fsSL "$release/SHA256SUMS" -o vendor/SHA256SUMS
+for pkg in net apw local-trust reputation trust-layer cloud-images identity-atproto; do
+  filename="verared-$pkg-0.1.0-alpha.2.tgz"
+  curl -fsSL "$release/$filename" -o "vendor/$filename"
+done
+(cd vendor && sha256sum -c --strict SHA256SUMS)
+```
+
+Use the following `package.json`. The overrides keep transitive workspace dependencies on the same local archives. Run `npm install` once to create the lockfile, then use `npm ci` with that lockfile and the verified archives:
 
 ```json
 {
   "dependencies": {
-    "@verared/net": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-net-0.1.0-alpha.1.tgz",
-    "@verared/apw": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-apw-0.1.0-alpha.1.tgz",
-    "@verared/local-trust": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-local-trust-0.1.0-alpha.1.tgz",
-    "@verared/reputation": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-reputation-0.1.0-alpha.1.tgz",
-    "@verared/trust-layer": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-trust-layer-0.1.0-alpha.1.tgz",
-    "@verared/cloud-images": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-cloud-images-0.1.0-alpha.1.tgz",
-    "@verared/identity-atproto": "https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.1/verared-identity-atproto-0.1.0-alpha.1.tgz"
+    "@verared/net": "file:vendor/verared-net-0.1.0-alpha.2.tgz",
+    "@verared/apw": "file:vendor/verared-apw-0.1.0-alpha.2.tgz",
+    "@verared/local-trust": "file:vendor/verared-local-trust-0.1.0-alpha.2.tgz",
+    "@verared/reputation": "file:vendor/verared-reputation-0.1.0-alpha.2.tgz",
+    "@verared/trust-layer": "file:vendor/verared-trust-layer-0.1.0-alpha.2.tgz",
+    "@verared/cloud-images": "file:vendor/verared-cloud-images-0.1.0-alpha.2.tgz",
+    "@verared/identity-atproto": "file:vendor/verared-identity-atproto-0.1.0-alpha.2.tgz"
   },
   "overrides": {
     "@verared/net": "$@verared/net",
@@ -74,12 +95,21 @@ During Wave 2, `@verared/*` packages are distributed as `.tgz` tarballs attached
 
 ## Development & Verification
 
-```bash
-npm ci
-npm run build             # Compiles all 7 packages to dist/ (ESM .js + .d.ts)
-npm run check:boundaries  # Licenses, DAG, host neutrality, runtime imports, SPEC-PIN
-npm test                  # Vitest unit + specification vector conformance suite
-npm run smoke:tarballs    # Packs all 7 .tgz and verifies external ESM consumption
-```
+Run `npm ci` with Node 24. For the vector tests, check out the exact specification commit from `SPEC-PIN.json` and set `VERARED_SPEC_DIR` to its `spec/` directory (the default expects a sibling checkout). Run the build before the boundary guard and tests.
+
+| Gate | Evidence |
+|---|---|
+| `npm run build` | Seven packages compile to ESM and declarations. |
+| `npm run check:boundaries` | License, package DAG, host neutrality, Web-API import graphs and exact specification pin. |
+| `npm test -- --maxWorkers=2` | Alpha.2 baseline: 47 files, 614 passing tests and one opt-in live DoH test skipped. |
+| `npm run smoke:tarballs` | An isolated consumer imports all 17 ESM entrypoints. |
+| `npm run smoke:types` | All 17 entrypoints and the Gatekeeper consumer compile with strict `NodeNext` from the tarballs. |
+| `npm run pack:release` | Seven versioned `.tgz` files and `SHA256SUMS` in a clean output directory; the [tag workflow](./.github/workflows/release.yml) gates and publishes the assets. |
+
+## Gatekeeper integration
+
+Use the root `@verared/trust-layer` verifier with a trusted ingress resolver and a shared `ResolutionBudget` for host-controlled egress. Bind the verified signing key to the reader's DID before calling the bounded identity verifier in `@verared/local-trust`. Admit evidence under the appropriate profile, keep reader scores separate from public site projections in `@verared/reputation`, then evaluate the read policy with `@verared/apw/scoring`. A valid proof or public level alone does not grant access. Keep unavailable verification distinct from invalid credentials; the unsigned-reader rule was not changed by alpha.2.
+
+See the [migration and wiring guide](./docs/MIGRATION-v0.1.0-alpha.2.md) for exact signatures, fail-closed behavior and the B3 decision boundary.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for DCO (`Signed-off-by`) requirements.
