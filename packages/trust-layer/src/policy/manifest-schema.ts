@@ -1,9 +1,9 @@
-// Esquema del manifiesto de politicas de contenido de un sitio Portaless.
-// Publicado en "/.well-known/portaless-content-policy.json".
+// Esquema del manifiesto de políticas de contenido de un sitio.
+// Publicado en "/.well-known/vera-content-policy.json".
 //
 // Vocabulario de "search" / "ai_input" / "ai_train" alineado deliberadamente
 // con el de Content Signals Policy de Cloudflare, para que cualquier
-// crawler que ya respete ese estandar entienda la politica de Portaless
+// crawler que ya respete ese estándar entienda la política del sitio
 // sin aprender un formato propietario nuevo.
 
 export type AccessMode = "allow" | "charge" | "block";

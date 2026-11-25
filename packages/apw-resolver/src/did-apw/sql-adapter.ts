@@ -6,6 +6,8 @@
 // BEGIN IMMEDIATE / COMMIT en SQLite (sin awaits entre medio, asi no se
 // intercala con otra escritura del mismo proceso).
 
+import type { D1Database } from "../d1-database.js";
+
 export interface SqlStatement {
   sql: string;
   params?: unknown[];

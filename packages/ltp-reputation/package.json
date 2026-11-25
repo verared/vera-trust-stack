@@ -4,6 +4,7 @@
   "description": "Deterministic G4 SVRI reputation engine: projection, eligibility, and static REP-01..REP-11 vector evaluator.",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": { "access": "public" },
   "author": "Gerardo Loyola",
   "repository": {
     "type": "git",

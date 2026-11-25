@@ -39,11 +39,6 @@ import { scoreSubject, type DimensionScore } from "@verared/apw/scoring";
 import { scoreSiteDimensions, type SiteSnapshotLike } from "@verared/apw/scoring";
 import { projectTrustView } from "@verared/apw/scoring";
 
-export interface AtprotoReputationEnv {
-  DB?: unknown;
-  PORTALESS_SQLITE_PATH?: string;
-}
-
 export interface SiteTrustView {
   siteId: string;
   counts: Record<string, number>;
@@ -86,7 +81,6 @@ export interface AtprotoReputationResult {
 }
 
 export interface AtprotoReputationDeps {
-  env?: AtprotoReputationEnv;
   fetchImpl?: typeof fetch;
   /** Resolucion AT completa (inyectable para tests). */
   resolveAtproto?: (handle: string, deps: ResolveDeps) => Promise<ResolveIdentityResult>;
@@ -97,15 +91,15 @@ export interface AtprotoReputationDeps {
   /** Atestaciones reader_conduct del lector (inyectable). */
   loadConduct?: (host: string) => Promise<ReaderConductResult>;
   /** Fabrica de identidad local (inyectable; evita acoplar L2 a SQLite). */
-  createSiteIdentityStore?: (env: Record<string, unknown>) => Promise<{ get(siteId: string): Promise<{ did?: string } | null> }>;
+  createSiteIdentityStore?: () => Promise<{ get(siteId: string): Promise<{ did?: string } | null> }>;
   /** Fabrica de SiteTrustScore local (inyectable; evita acoplar L2 a SQLite). */
-  createSiteTrustScoreStore?: (env: Record<string, unknown>) => Promise<{ getSnapshot(siteId: string): Promise<SiteSnapshotLike> }>;
+  createSiteTrustScoreStore?: () => Promise<{ getSnapshot(siteId: string): Promise<SiteSnapshotLike> }>;
 }
 
 /** Limitaciones estructurales siempre presentes (honestidad del proyecto). */
 const STATIC_LIMITATIONS = [
   "atproto_third_party_resolution: la resolucion depende de terceros (DNS y plc.directory)",
-  "apw_link_suffix_walk: solo se descubren vinculos por sufijo de dominio; el indice inverso de claims es Portaless Index (futuro)",
+  "apw_link_suffix_walk: solo se descubren vinculos por sufijo de dominio; el indice inverso de claims es trabajo futuro",
   "reader_conduct_host_scoped: la reputacion R vive en el host del lector; usuarios AT sin historial APW reportan no_data",
   "remote_trust_best_effort: la reputacion W remota depende del endpoint publico /trust del sitio",
 ] as const;
@@ -139,19 +133,18 @@ function countsFromSnapshot(snapshot: SiteSnapshotLike): Record<string, number> 
  * devuelven SOLO el nivel publico (aggregates + PUBLIC_DIMENSIONS).
  */
 function defaultFetchSiteTrust(
-  env: AtprotoReputationEnv | undefined,
   fetchImpl: typeof fetch,
   stores: Pick<AtprotoReputationDeps, "createSiteIdentityStore" | "createSiteTrustScoreStore"> = {},
 ) {
   return async (siteId: string): Promise<SiteTrustView | null> => {
     const trustUrl = `https://${siteId}/trust/${siteId}`;
     // Local solo si este deployment es el sitio y el host inyecto los puertos de almacenamiento.
-    if (env && (env.DB || env.PORTALESS_SQLITE_PATH) && stores.createSiteIdentityStore && stores.createSiteTrustScoreStore) {
+    if (stores.createSiteIdentityStore && stores.createSiteTrustScoreStore) {
       try {
-        const identity = await stores.createSiteIdentityStore(env as Record<string, unknown>);
+        const identity = await stores.createSiteIdentityStore();
         const record = await identity.get("default");
         if (record?.did === `did:apw:${siteId}`) {
-          const store = await stores.createSiteTrustScoreStore(env as Record<string, unknown>);
+          const store = await stores.createSiteTrustScoreStore();
           const snapshot = await store.getSnapshot(siteId);
           return {
             siteId,
@@ -280,7 +273,7 @@ export async function buildAtprotoReputation(rawHandle: unknown, deps: AtprotoRe
     const candidate = candidates.find((entry) => entry.siteId === link.siteId)!;
     const fetchSiteTrust =
       deps.fetchSiteTrust ??
-      defaultFetchSiteTrust(deps.env, fetchImpl, {
+      defaultFetchSiteTrust(fetchImpl, {
         createSiteIdentityStore: deps.createSiteIdentityStore,
         createSiteTrustScoreStore: deps.createSiteTrustScoreStore,
       });

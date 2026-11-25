@@ -17,7 +17,7 @@
 // Todo es opcional: un sitio sin APW resuelve igual (solo identity AT),
 // y un sitio APW sin ningun vinculo AT no cambia en nada su comportamiento.
 // La direccion inversa (encontrar QUE sitio reclama un handle de
-// otro dominio) requiere un indice inverso -- Portaless Index, futuro
+// otro dominio) requiere un indice inverso -- trabajo futuro
 // trabajo; documentado como limite honesto en identity-atproto.md.
 
 import { apwCandidateDomains, handleFromAtUri, atUriFromHandle } from "./handle";

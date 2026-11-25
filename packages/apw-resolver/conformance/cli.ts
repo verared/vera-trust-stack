@@ -10,7 +10,7 @@
  * The vectors are CC BY 4.0 and independent of any code: download
  * `docs/protocol-apw/vectors/v1.3/` from the specification repository and point
  * this at it. This is the exit condition of ROADMAP Phase 7 -- a third party can
- * obtain a comparable pass/fail without reading Portaless's source.
+ * obtain a comparable pass/fail without reading this implementation.
  *
  * Exit code 0 when every executed case passes, 1 otherwise. Vectors with no
  * executor for their case kinds are reported as `unsupported` and also fail,

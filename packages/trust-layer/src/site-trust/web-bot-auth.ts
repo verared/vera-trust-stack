@@ -1,5 +1,5 @@
 // Verificacion de identidad de agentes via Web Bot Auth (RFC 9421 HTTP
-// Message Signatures) -- v0.0.9.21. Portaless NUNCA firma nada -- solo
+// Message Signatures). Esta ruta no firma: solo
 // verifica firmas de agentes externos que reportan sobre la fuente
 // "agent" de SiteTrustScore. Usa el paquete oficial `web-bot-auth`
 // (verify() + verifierFromJWK()) en vez de reimplementar la
@@ -99,7 +99,7 @@ async function fetchJwksWithCache(signatureAgentUrl: string, kv?: KvNamespaceLik
     if (cached) return JSON.parse(cached) as Jwks;
   } else {
     console.warn(
-      "[Portaless WebBotAuth] Sin KV configurado -- cada verificacion hace fetch directo del JWKS. " +
+      "[WebBotAuth] Sin KV configurado -- cada verificacion hace fetch directo del JWKS. " +
         "Configura env.JWKS_CACHE para evitar latencia y dependencia de disponibilidad del agente."
     );
   }

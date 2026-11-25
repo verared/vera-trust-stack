@@ -7,7 +7,7 @@
 //
 // Este archivo NO reimplementa el estandar completo (eso pertenece a una
 // libreria dedicada de verificacion de HTTP Message Signatures). Aqui solo
-// se define el modelo de datos que Portaless usa para resolver y cachear
+// se define el modelo de datos para resolver y cachear
 // esas claves, siendo explicitamente agnostico al algoritmo de firma para
 // permitir una migracion futura a esquemas post-cuanticos (ML-DSA, SLH-DSA)
 // sin rediseñar el protocolo -- ver docs/architecture/site-trust-score.md,
@@ -59,14 +59,14 @@ export async function resolveAgentKeyDirectory(
 }
 
 /**
- * Genera el propio directorio de claves publicas de un sitio Portaless
+ * Genera el directorio de claves públicas del sitio
  * (necesario si el sitio, a su vez, opera agentes propios que deben
  * identificarse ante terceros — por ejemplo, un agente de indexacion interno).
  */
 export function buildOwnKeyDirectory(keys: AgentKeyRecord[]) {
   return {
     version: "0.1",
-    generator: "portaless-trust-layer",
+    generator: "vera-trust-layer",
     keys,
   };
 }

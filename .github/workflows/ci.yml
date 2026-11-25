@@ -44,3 +44,6 @@ jobs:
 
       - name: Smoke test all 7 @verared/* release tarballs in isolated consumer
         run: npm run smoke:tarballs
+
+      - name: Check published declarations in a strict NodeNext consumer
+        run: npm run smoke:types

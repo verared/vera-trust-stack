@@ -1,10 +1,11 @@
+import type { TrustedIngress } from "./client-ip";
+
 /** Configuration diagnostic only; no request header can claim trust or WAF coverage. */
-export function trustedIngressStatus(env: { __PORTALESS_RUNTIME?: string; PORTALESS_TRUSTED_CLOUDFLARE_INGRESS?: string } = {}) {
-  const node = env.__PORTALESS_RUNTIME === "node";
-  const declaredCloudflare = !node && env.PORTALESS_TRUSTED_CLOUDFLARE_INGRESS === "true";
+export function trustedIngressStatus(ingress?: TrustedIngress) {
+  const configured = typeof ingress?.resolveClientIp === "function";
   return {
-    configured: node || declaredCloudflare,
-    source: node ? "node-runtime" : declaredCloudflare ? "operator-declared-cloudflare" : "unconfigured",
+    configured,
+    source: configured ? "injected-resolver" : "unconfigured",
     edgeRulesVerified: false,
   };
 }

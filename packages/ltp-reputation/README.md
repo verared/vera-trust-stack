@@ -42,5 +42,5 @@ projections through both this package and `apw-resolver`, compares them within
 unknown-field, invalid-dimension, duplicate-dimension and zero-weight cases fail
 closed or remain priors.
 
-This package is not wired to the Portaless runtime/UI or activation; those
+This package does not wire up a host runtime, UI, or activation; those
 remain separate owner decisions.

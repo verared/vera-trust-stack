@@ -43,7 +43,6 @@ import { parseSignatureAgent, parseWebBotAuthSignatureInput } from "./headers";
 import { isMlDsaJwk, jwkKeyAlgorithm, normalizeAlgParam, verifyMlDsaSignature } from "./ml-dsa";
 import {
   InMemoryWebBotAuthNonceStore,
-  type NonceStoreFactoryEnv,
   type WebBotAuthNonceStore,
 } from "./nonce-store";
 import type { SafeFetcher } from "@verared/net";
@@ -94,14 +93,12 @@ export function __resetNonceStoreForTests(): void {
 
 export interface VerifyWebBotAuthOptions {
   nonceStore?: WebBotAuthNonceStore;
-  createNonceStore?: (env: NonceStoreFactoryEnv) => Promise<WebBotAuthNonceStore>;
-  env?: NonceStoreFactoryEnv & {
-    PORTALESS_WBA_RESERVED_ORIGINS?: string;
-    PORTALESS_RESOLUTION_BUDGET_ENABLED?: string;
-    PORTALESS_RESOLUTION_BUDGET_SECRET?: string;
-    PORTALESS_RESOLUTION_BUDGET_PREVIOUS_SECRET?: string;
-    PORTALESS_TRUSTED_CLOUDFLARE_INGRESS?: string;
-    __PORTALESS_RUNTIME?: string;
+  createNonceStore?: () => Promise<WebBotAuthNonceStore>;
+  reservedOrigins?: string[];
+  resolutionBudget?: {
+    secret: string;
+    previousSecret?: string;
+    ingress?: import("../net/client-ip").TrustedIngress;
   };
   /** Solo para tests o runtimes que ya inyectan un fetcher endurecido. */
   directoryFetcher?: SafeFetcher;
@@ -143,23 +140,18 @@ export async function verifyWebBotAuthRequest(
   if (now > parsed.expires) return { verified: false, reason: "signature_expired", failureType: "expired" };
 
   let budgetContext: { budget: ResolutionBudget; clientBucket: string | readonly string[] } | undefined;
-  if (options?.env?.PORTALESS_RESOLUTION_BUDGET_ENABLED === "true") {
-    const runtime = options.env.__PORTALESS_RUNTIME === "node" ? "node" : "cloudflare";
-    if (!options.env.PORTALESS_RESOLUTION_BUDGET_SECRET || options.env.PORTALESS_RESOLUTION_BUDGET_SECRET.length < 32
-      || (options.env.PORTALESS_RESOLUTION_BUDGET_PREVIOUS_SECRET && options.env.PORTALESS_RESOLUTION_BUDGET_PREVIOUS_SECRET.length < 32)
-      || (runtime === "cloudflare" && options.env.PORTALESS_TRUSTED_CLOUDFLARE_INGRESS !== "true")) {
+  if (options?.resolutionBudget) {
+    const { secret, previousSecret, ingress } = options.resolutionBudget;
+    if (typeof secret !== "string" || secret.length < 32
+      || (previousSecret !== undefined && (typeof previousSecret !== "string" || previousSecret.length < 32))
+      || typeof ingress?.resolveClientIp !== "function") {
       return { verified: false, reason: "resolution_budget_misconfigured", failureType: "unavailable", retryAfterSeconds: 1, status: 503 };
     }
-    const clientBucket = await resolutionClientBuckets(request, {
-      runtime,
-      trustedCloudflareIngress: options.env.PORTALESS_TRUSTED_CLOUDFLARE_INGRESS === "true",
-      secret: options.env.PORTALESS_RESOLUTION_BUDGET_SECRET,
-      previousSecret: options.env.PORTALESS_RESOLUTION_BUDGET_PREVIOUS_SECRET,
-    });
+    const clientBucket = await resolutionClientBuckets(request, { ingress, secret, previousSecret });
     budgetContext = { budget: resolutionBudget, clientBucket };
   }
   const resolved = await directories.resolve(operatorOrigin, options?.directoryFetcher,
-    options?.env?.PORTALESS_WBA_RESERVED_ORIGINS?.split(",").map((value) => value.trim()).filter(Boolean), budgetContext);
+    options?.reservedOrigins, budgetContext);
   if (!resolved.ok && resolved.reason === "directory_redirect_disabled") {
     return { verified: false, reason: resolved.reason, failureType: "directory_redirect_disabled", status: 401 };
   }
@@ -212,14 +204,14 @@ export async function verifyWebBotAuthRequest(
   if (!parsed.nonce) return { verified: false, reason: "missing_nonce" };
 
   // El nonce se consume DESPUES de validar la firma: si no, cualquiera sin la
-  // clave podria sondear que nonces ya se usaron. Con options.env se usa el
-  // store compartido (D1/SQLite); sin env, el store en memoria del proceso.
+  // clave podria sondear que nonces ya se usaron. El host puede inyectar un
+  // store compartido; por defecto se usa la memoria del proceso.
   {
     const nowMs = Date.now();
     const store =
       options?.nonceStore ??
-      (options?.createNonceStore && options?.env
-        ? await options.createNonceStore(options.env)
+      (options?.createNonceStore
+        ? await options.createNonceStore()
         : memoryNonceStore);
     const isFirstUse = await store.registerIfUnseen(parsed.nonce, nowMs, NONCE_WINDOW_MS);
     if (!isFirstUse) return { verified: false, reason: "nonce_replayed" };

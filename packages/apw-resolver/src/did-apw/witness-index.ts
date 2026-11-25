@@ -1,6 +1,6 @@
 // packages/apw-resolver/src/did-apw/witness-index.ts
 //
-// Portaless Index -- agregador de testigos (APW v1.3, 5.7 y seccion 7).
+// Witness Index -- agregador de testigos (APW v1.3, 5.7 y seccion 7).
 // Los primitivos de 5.7 (witness.ts) ya permiten a CADA sitio anotar y
 // verificar observaciones; esto agrega la pieza que la spec deja en "quien
 // evalua decide que testigos escuchar": un nodo que consulta a un set de

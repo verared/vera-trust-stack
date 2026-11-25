@@ -97,7 +97,7 @@ export class CloudflarePayPerCrawlProvider implements PayPerCrawlProvider {
 
     const price = formatCrawlerPrice(rule.price_usd);
     if (!price) {
-      console.warn(`[Portaless Pay Per Crawl] price_usd invalido o menor a USD ${MIN_PRICE_USD}: no se emite crawler-price.`);
+      console.warn(`[Pay Per Crawl] price_usd invalido o menor a USD ${MIN_PRICE_USD}: no se emite crawler-price.`);
       return null;
     }
 

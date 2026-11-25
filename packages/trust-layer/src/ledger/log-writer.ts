@@ -6,7 +6,7 @@
 //
 // Nota de diseño: cada entrada deberia idealmente firmarse y, en una version
 // futura, anclarse a un log tipo Certificate Transparency para volverla
-// resistente a modificacion retroactiva -- ver Portaless_Trust_Layer.md,
+// resistente a modificacion retroactiva,
 // seccion 3.1, para el razonamiento legal detras de esta decision.
 //
 // ERRATA E-9: readerDid se fija la primera vez que llega para un

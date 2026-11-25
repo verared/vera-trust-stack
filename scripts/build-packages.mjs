@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeDeclarations } from './normalize-declarations.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const tscBin = resolve(root, 'node_modules/typescript/bin/tsc');
@@ -85,6 +86,7 @@ for (const pkg of PACKAGES) {
     cwd: pkgDir,
     stdio: 'inherit',
   });
+  normalizeDeclarations(distDir);
 
   // 2. Bundle each public entry point to ESM .js with external packages
   for (const [srcRel, outRel] of pkg.entries) {

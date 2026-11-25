@@ -20,7 +20,7 @@ Open-source TypeScript/ESM reference implementation of the **Vera Trust Stack** 
 | **L2** | `@verared/cloud-images` | [`packages/cloud-images`](./packages/cloud-images) | `.` | Web-API / Node 24 |
 | **L2** | `@verared/identity-atproto` | [`packages/identity-atproto`](./packages/identity-atproto) | `.` | Web-API / Node 24 |
 
-All 7 packages compile to `dist/` (ESM `.js` + TypeScript `.d.ts`) and have **zero** dependencies on any CMS, SQLite driver, or `better-sqlite3` (storage is injected via pure TypeScript ports + `InMemory*` stores).
+All 7 packages compile to `dist/` (ESM `.js` + TypeScript `.d.ts`) without CMS or database-driver dependencies. Hosts supply storage via TypeScript ports and can use the `InMemory*` stores for local use.
 
 ---
 
@@ -58,7 +58,7 @@ During Wave 2, `@verared/*` packages are distributed as immutable `.tgz` tarball
 ```bash
 npm ci
 npm run build             # Compiles all 7 packages to dist/ (ESM .js + .d.ts)
-npm run check:boundaries  # Licenses, DAG, 0 deep src/, 0 Portaless/SQLite refs, SPEC-PIN
+npm run check:boundaries  # Licenses, DAG, host neutrality, runtime imports, SPEC-PIN
 npm test                  # Vitest unit + specification vector conformance suite
 npm run smoke:tarballs    # Packs all 7 .tgz and verifies external ESM consumption
 ```

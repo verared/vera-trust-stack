@@ -16,7 +16,7 @@
 //                     intento verificar y fallo), no ausencia.
 //   community     -> atestacion de visitantes humanos. Ausencia = neutral.
 //   escrow_report -> ground truth de una transaccion real, reportada por
-//                     un tercero de escrow (Portaless nunca custodia
+//                     un tercero de escrow (el host no custodia
 //                     fondos). Ausencia = neutral (sin transacciones aun).
 //
 // v0.0.9.19: CommunityTrustVote agrega ipHash -- habilita rate-limiting

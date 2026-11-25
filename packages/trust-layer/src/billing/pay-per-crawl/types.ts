@@ -1,6 +1,6 @@
-// Proveedores de pay-per-crawl intercambiables. Portaless no toca el dinero
+// Proveedores de pay-per-crawl intercambiables. La biblioteca no custodia dinero
 // (APW-SPEC 9): cada proveedor delega el cobro en una infraestructura externa
-// (Cloudflare hoy; github-pay-per-crawl o uno propio de Portaless mas adelante).
+// (por ejemplo Cloudflare).
 //
 // Regla de activacion: un proveedor solo cobra si (1) el manifiesto publico
 // declara settlement_provider con su id y (2) existe una activacion en la base

@@ -6,7 +6,7 @@
 // hashApiKey() usa Web Crypto (SHA-256), la misma primitiva que
 // functions/trust/[siteId]/vote.js para hashear IPs.
 //
-// No hay autoservicio: Portaless genera y entrega la API key fuera de
+// No hay autoservicio: el host genera y entrega la API key fuera de
 // banda. Es deliberadamente la barrera de entrada mas alta de las 4
 // fuentes, coherente con que escrow_report es ground truth. Ver
 // docs/architecture/site-trust-score.md.
@@ -15,10 +15,7 @@
 // solo se persiste el hash SHA-256 (write-once, never readable). revoke()
 // hace soft-delete (active = 0).
 //
-// v0.0.9.27: SqliteAuthorizedEscrowProvidersStore migrado de node:sqlite a
-// host SQLite via openSqlite(). Uso: await SqliteAuthorizedEscrowProvidersStore.open(path).
-// La factory ya NO cae a memoria si PORTALESS_SQLITE_PATH esta definido y
-// SQLite no abre (antes: todos los reportes de escrow rechazados en silencio).
+// El host inyecta el store persistente y reporta sus fallos de apertura.
 //
 // APW v1.2 (5.3, ERRATA E-4): cada proveedor puede registrar su clave publica
 // Ed25519 (public_key_jwk). La API key sigue autenticando el endpoint; la
@@ -234,4 +231,3 @@ export class InMemoryAuthorizedEscrowProvidersStore implements AuthorizedEscrowP
     return true;
   }
 }
-

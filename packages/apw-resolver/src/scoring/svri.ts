@@ -457,7 +457,7 @@ export function buildSiteEvidenceContext(
 }
 
 /**
- * Site SVRI from rows admitted by Portaless' signature-verifying ingestion
+ * Site SVRI from rows admitted by signature-verifying ingestion
  * paths. Legacy rows without stored JWS+jti remain visible in the old snapshot
  * but do not contribute to this verified projection.
  */

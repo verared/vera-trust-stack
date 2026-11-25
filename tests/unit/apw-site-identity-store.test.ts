@@ -16,7 +16,7 @@ describe("InMemorySiteIdentityStore", () => {
   let env;
 
   beforeAll(() => {
-    env = { PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY: randomEncryptionKeyBase64() };
+    env = { encryptionKey: randomEncryptionKeyBase64() };
   });
 
   it("devuelve null si el sitio no tiene identidad todavia", async () => {
@@ -53,8 +53,8 @@ describe("InMemorySiteIdentityStore", () => {
   });
 
   it("cada store descifra correctamente con su propia clave de cifrado", async () => {
-    const envA = { PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY: randomEncryptionKeyBase64() };
-    const envB = { PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY: randomEncryptionKeyBase64() };
+    const envA = { encryptionKey: randomEncryptionKeyBase64() };
+    const envB = { encryptionKey: randomEncryptionKeyBase64() };
     const keyPair = await generateApwDid("sitio-fijo.example.com");
 
     const storeA = new InMemorySiteIdentityStore(envA);
@@ -69,6 +69,6 @@ describe("InMemorySiteIdentityStore", () => {
   it("lanza un error claro si falta la variable de entorno de cifrado", async () => {
     const store = new InMemorySiteIdentityStore({});
     const keyPair = await generateApwDid("sin-env.example.com");
-    await expect(store.create("default", keyPair, "admin")).rejects.toThrow(/PORTALESS_SITE_IDENTITY_ENCRYPTION_KEY/);
+    await expect(store.create("default", keyPair, "admin")).rejects.toThrow(/encryptionKey is required/);
   });
 });

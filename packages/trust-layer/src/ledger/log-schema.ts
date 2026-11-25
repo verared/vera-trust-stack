@@ -1,5 +1,5 @@
 // Esquema del ledger publico de trazabilidad de agentes de IA.
-// Publicado en "/.well-known/portaless-usage-log.json" (o servido via API
+// El host puede publicarlo en "/.well-known/vera-usage-log.json" (o via API
 // paginada para sitios de alto trafico).
 //
 // Inspirado explicitamente en los paneles publicos de uso por modelo de

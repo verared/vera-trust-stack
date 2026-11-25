@@ -1,5 +1,5 @@
 // Carga en runtime la politica publicada en
-// /.well-known/portaless-content-policy.json. En Cloudflare Pages el archivo
+// /.well-known/vera-content-policy.json. En Cloudflare Pages el archivo
 // es un asset estatico y se lee con el binding env.ASSETS.
 //
 // Si no hay binding (runtime Node), el archivo no existe, no es JSON o no
@@ -13,7 +13,7 @@
 import { defaultContentPolicy, validateContentPolicy, type ContentPolicyManifest } from "./manifest-schema";
 import type { AgentAccessPolicyStore } from "./agent-access-store";
 
-export const CONTENT_POLICY_WELL_KNOWN_PATH = "/.well-known/portaless-content-policy.json";
+export const CONTENT_POLICY_WELL_KNOWN_PATH = "/.well-known/vera-content-policy.json";
 
 export interface AssetsFetcher {
   fetch(input: Request | string): Promise<Response>;
@@ -41,7 +41,7 @@ export interface ResolvedContentPolicy {
  * Precedencia store > asset > default (ROADMAP.md, fase 12 §12.1).
  *
  * El store es el override que el dueno escribio desde /admin/agents; el asset
- * es /.well-known/portaless-content-policy.json; el default es
+ * es /.well-known/vera-content-policy.json; el default es
  * defaultContentPolicy(). Cada capa cae a la siguiente si no existe o es
  * invalida -- nunca se aplica una politica a medias.
  *
@@ -66,7 +66,7 @@ export async function resolveContentPolicy(
         return { policy: record.policy, source: "store", updatedAt: record.updatedAt, updatedBy: record.updatedBy };
       }
     } catch (err) {
-      console.warn(`[Portaless Trust Layer] No se pudo leer el override de politica: ${(err as Error).message}. Se usa el asset.`);
+      console.warn(`[Vera Trust Layer] No se pudo leer el override de politica: ${(err as Error).message}. Se usa el asset.`);
     }
   }
 
@@ -78,9 +78,9 @@ export async function resolveContentPolicy(
     if (!res.ok) return { policy: defaultContentPolicy(origin), source: "default" };
     const json: unknown = await res.json();
     if (validateContentPolicy(json) && hasCompleteRules(json)) return { policy: json, source: "asset" };
-    console.warn("[Portaless Trust Layer] portaless-content-policy.json incompleto o invalido: se usa la politica por defecto.");
+    console.warn("[Vera Trust Layer] Política publicada incompleta o inválida: se usa la política por defecto.");
   } catch (err) {
-    console.warn(`[Portaless Trust Layer] No se pudo leer la politica: ${(err as Error).message}. Se usa la politica por defecto.`);
+    console.warn(`[Vera Trust Layer] No se pudo leer la politica: ${(err as Error).message}. Se usa la politica por defecto.`);
   }
   return { policy: defaultContentPolicy(origin), source: "default" };
 }

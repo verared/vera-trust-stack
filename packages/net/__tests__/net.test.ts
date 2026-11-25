@@ -83,7 +83,7 @@ describe("@verared/net — SSRF, IP ranges & IPv4-mapped IPv6", () => {
     for (const host of ["localhost", "LOCALHOST.", "sub.localhost", "printer.local", "db.internal", "demo.example", "hidden.onion"]) {
       expect(isBlockedHostname(host), host).toBe(true);
     }
-    expect(isBlockedHostname("portaless.org")).toBe(false);
+    expect(isBlockedHostname("example.org")).toBe(false);
     expect(isPrivateHost("hooks.example.test")).toBe(false);
     expect(isPrivateHost("svc.internal")).toBe(true);
   });
