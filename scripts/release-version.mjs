@@ -11,7 +11,7 @@ export function releaseVersion(tag) {
   if (!match || match[4]?.split('.').some((part) => /^0\d+$/.test(part))) throw new Error(`Invalid root version: ${version}`);
   if (tag !== undefined && tag !== `v${version}`) throw new Error(`Tag ${tag} does not match v${version}`);
   const dirs = readdirSync(new URL('../packages/', import.meta.url), { withFileTypes: true }).filter((entry) => entry.isDirectory());
-  if (dirs.length !== 7) throw new Error(`Expected 7 packages, got ${dirs.length}`);
+  if (dirs.length !== 8) throw new Error(`Expected 8 packages, got ${dirs.length}`);
   const names = new Set();
   for (const { name: dir } of dirs) {
     const pkg = read(`../packages/${dir}/package.json`);

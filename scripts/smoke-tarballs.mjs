@@ -19,6 +19,7 @@ const PACKAGE_DIRS = [
   'trust-layer',
   'cloud-images',
   'identity-atproto',
+  'cli',
 ];
 
 // Ensure dist/ is built
@@ -78,7 +79,7 @@ try {
     }
   }
 
-  // Smoke-import all 17 public entrypoints in pure Node ESM (no TypeScript stripping)
+  // Smoke-import every public entrypoint in pure Node ESM (no TypeScript stripping)
   const smokeScript = `
     import * as net from '@verared/net';
     import * as apw from '@verared/apw';
@@ -97,11 +98,12 @@ try {
     import * as tlNet from '@verared/trust-layer/net';
     import * as cloudImages from '@verared/cloud-images';
     import * as identityAtproto from '@verared/identity-atproto';
+    import * as cli from '@verared/cli';
 
     const mods = {
       net, apw, apwFull, apwResolver, apwDid, apwScoring, apwFed,
       localTrust, reputation, trustLayer, tlSiteTrust, tlPolicy,
-      tlBilling, tlLedger, tlNet, cloudImages, identityAtproto,
+      tlBilling, tlLedger, tlNet, cloudImages, identityAtproto, cli,
     };
     for (const [k, m] of Object.entries(mods)) {
       if (!m || Object.keys(m).length === 0) {
@@ -116,6 +118,16 @@ try {
   `;
   writeFileSync(join(consumerDir, 'smoke.mjs'), smokeScript, 'utf8');
   execFileSync(process.execPath, [join(consumerDir, 'smoke.mjs')], { cwd: consumerDir, stdio: 'inherit' });
+
+  if (!checkTypes) {
+    const bin = join(consumerDir, 'node_modules/.bin/verared');
+    const vectors = resolve(process.env.VERARED_SPEC_DIR ?? resolve(root, '../vera-trust-spec/spec'), 'vectors/v1.3');
+    const run = (args) => execFileSync(process.execPath, [bin, ...args], { cwd: consumerDir, encoding: 'utf8' });
+    if (!run(['--help']).includes('verared verify <domain>')) throw new Error('CLI help is missing');
+    const report = run(['conformance', vectors]);
+    if (!report.includes('110 passed, 0 failed, 0 unsupported')) throw new Error(`Unexpected APW conformance: ${report}`);
+    console.log(`[smoke-tarballs] Installed CLI help and APW conformance OK: ${report.trim()}`);
+  }
 
   if (checkTypes) {
     const typeAssertions = [];
@@ -138,8 +150,8 @@ try {
       }
     }
     const smokeNames = new Set([...smokeScript.matchAll(/from '([^']+)'/g)].map((match) => match[1]));
-    if (names.size !== 17 || smokeNames.size !== names.size || [...names].some((name) => !smokeNames.has(name))) {
-      throw new Error('Smoke imports must match all 17 declared entrypoints');
+    if (names.size !== 18 || smokeNames.size !== names.size || [...names].some((name) => !smokeNames.has(name))) {
+      throw new Error('Smoke imports must match all 18 declared entrypoints');
     }
     writeFileSync(join(consumerDir, 'smoke.mts'), `${smokeScript}\ntype AssertNever<T extends never> = T;\n${typeAssertions.join('\n')}\n`, 'utf8');
     copyFileSync(join(root, 'scripts/fixtures/gatekeeper.mts'), join(consumerDir, 'gatekeeper.mts'));

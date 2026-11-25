@@ -48,6 +48,8 @@ Host applications supply ingress, persistence, policy and settlement adapters. W
 
 All **7 packages and 17 public entrypoints** ship ESM and TypeScript declarations checked with strict `NodeNext`. The Web-API import boundary is not a claim of deployment parity across Workers and Deno; see the [roadmap](./ROADMAP.md).
 
+Development also includes [`@verared/cli`](./packages/cli), a Node-only command-line verifier with `verify` and `conformance`. It is the eighth workspace package and is not part of the published alpha.2 assets listed below. See the [runtime smoke matrix](./docs/RUNTIME-PARITY.md) for the tested surfaces.
+
 ---
 
 ## Consuming via GitHub Release Tarballs (No Registry Token Required)

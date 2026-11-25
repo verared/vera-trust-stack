@@ -21,5 +21,6 @@ Run `npm run build` followed by `npm run smoke:runtimes`. Each row probes the co
 | `@verared/trust-layer/net` | PASS | PASS, no `nodejs_compat` | PASS |
 | `@verared/cloud-images` | PASS | PASS, no `nodejs_compat` | PASS |
 | `@verared/identity-atproto` | PASS | PASS, no `nodejs_compat` | PASS |
+| `@verared/cli` (API and `verared` bin) | PASS; installed bin probed by `smoke:tarballs` | Node-only; not tested | Node-only; not tested |
 
 PASS covers module loading and the shared cryptographic probe. It does not establish live DoH, storage bindings, ML-DSA, or full host policy parity. The G2 transport uses the Node DNS and TLS connector and is supported only on Node; conformance there is covered by the dedicated transport tests, not this smoke. None of the tested Workers surfaces required `nodejs_compat` for this probe.

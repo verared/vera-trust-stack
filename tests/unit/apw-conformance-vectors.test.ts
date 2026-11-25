@@ -22,7 +22,7 @@ import {
   formatReport,
   type ConformanceReport,
   type VectorReport,
-} from "../../packages/apw-resolver/conformance/run";
+} from "../../packages/cli/src/conformance";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VECTORS_DIR = join(resolveSpecDir(), "vectors", "v1.3");

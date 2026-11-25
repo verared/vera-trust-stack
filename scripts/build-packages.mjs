@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Apache-2.0. Compiles all 7 @verared/* packages to dist/ (ESM .js + .d.ts) in topological order.
+// Apache-2.0. Compiles the @verared/* packages to ESM and declarations in topological order.
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeDeclarations } from './normalize-declarations.mjs';
@@ -73,6 +73,13 @@ const PACKAGES = [
     entries: [['src/index.ts', 'dist/index.js']],
     forbidNodeBuiltins: [],
   },
+  {
+    dir: 'cli',
+    name: '@verared/cli',
+    platform: 'node',
+    entries: [['src/index.ts', 'dist/index.js'], ['src/cli.ts', 'dist/cli.js']],
+    forbidNodeBuiltins: [],
+  },
 ];
 
 for (const pkg of PACKAGES) {
@@ -104,6 +111,7 @@ for (const pkg of PACKAGES) {
       ],
       { cwd: pkgDir, stdio: 'inherit' },
     );
+    if (pkg.dir === 'cli' && srcRel === 'src/cli.ts') chmodSync(outFull, 0o755);
 
     const dtsPath = outFull.replace(/\.js$/, '.d.ts');
     if (!existsSync(dtsPath)) {
@@ -122,4 +130,4 @@ for (const pkg of PACKAGES) {
   console.log(`[build-packages] OK ${pkg.name} (${pkg.entries.length} entrypoint(s))`);
 }
 
-console.log('[build-packages] All 7 @verared/* packages compiled to dist/ cleanly.');
+console.log(`[build-packages] All ${PACKAGES.length} @verared/* packages compiled to dist/ cleanly.`);
