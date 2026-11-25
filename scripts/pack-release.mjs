@@ -2,28 +2,28 @@
 // Apache-2.0. Packs all 7 @verared/* release tarballs + SHA256SUMS into a target directory outside the repo.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { releaseVersion } from './release-version.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const outDir = resolve(process.argv[2] || '/tmp/verared-release-stack-v0.1.0-alpha.1');
+const { version, packages } = releaseVersion();
+const outDir = process.argv[2] ? resolve(process.argv[2]) : mkdtempSync(join(tmpdir(), `verared-release-stack-v${version}-`));
 
 mkdirSync(outDir, { recursive: true });
+if (readdirSync(outDir).length) throw new Error(`Release output must be empty: ${outDir}`);
 execFileSync(process.execPath, [resolve(root, 'scripts/build-packages.mjs')], { cwd: root, stdio: 'inherit' });
 
-const dirs = ['net', 'apw-resolver', 'ltp-engine', 'ltp-reputation', 'trust-layer', 'cloud-images', 'identity-atproto'];
 const sums = [];
-for (const dir of dirs) {
+for (const dir of packages) {
   const pkgDir = resolve(root, 'packages', dir);
-  const out = execFileSync(npmBin, ['pack', '--pack-destination', outDir, '--silent'], { cwd: pkgDir, encoding: 'utf8' });
-  const filename = out
-    .trim()
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .findLast((l) => l.endsWith('.tgz'));
-  if (!filename) throw new Error(`Failed to determine packed tarball filename in ${dir}: ${out}`);
+  const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+  const packed = JSON.parse(execFileSync(npmBin, ['pack', '--pack-destination', outDir, '--json'], { cwd: pkgDir, encoding: 'utf8' }));
+  const filename = `${pkg.name.replace(/^@/, '').replace('/', '-')}-${version}.tgz`;
+  if (packed.length !== 1 || packed[0].filename !== filename) throw new Error(`Unexpected tarball for ${pkg.name}: ${JSON.stringify(packed)}`);
   const sha = createHash('sha256').update(readFileSync(join(outDir, filename))).digest('hex');
   sums.push(`${sha}  ${filename}`);
 }
