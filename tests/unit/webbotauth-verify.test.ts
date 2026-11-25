@@ -24,6 +24,7 @@ import {
   DIRECTORY_FETCH_COLD_MAX,
 } from "../../packages/trust-layer/src/webbotauth/verify";
 import { buildSignatureBase, parseSignatureInput } from "../../packages/trust-layer/src/webbotauth/rfc9421";
+import { admitAutomatedRead } from "../../packages/trust-layer/src/policy/b3";
 import { ResolutionBudget, RESOLUTION_BUDGET_PROPOSAL, resolutionClientBuckets } from "../../packages/trust-layer/src/net/resolution-budget";
 
 const OPERATOR_ORIGIN = "https://agent-operator.example.com";
@@ -120,6 +121,32 @@ describe("verifyWebBotAuthRequest (middleware)", () => {
     );
   }
 
+  const matrix = (['public', 'governed'] as const).flatMap((route) =>
+    (['allow', 'block', 'charge'] as const).flatMap((aiInput) =>
+      (['absent', 'invalid', 'valid'] as const).map((signature) => ({ route, aiInput, signature }))));
+  it.each(matrix)('B3 $route / $aiInput / $signature', async ({ route, aiInput, signature }) => {
+    let request = new Request('https://mysite.example/pages/foo');
+    if (signature !== 'absent') {
+      const { privateKey, publicKeyX } = await generateKeyPair();
+      mockDirectoryOnce(publicKeyX);
+      request = await buildSignedRequest({ privateKey, keyId: KEY_ID });
+      if (signature === 'invalid') request = new Request(new URL('/different', request.url), { headers: request.headers });
+    }
+    const result = await admitAutomatedRead(request, { route, aiInput });
+    const expected = signature === 'invalid' ? { outcome: 'deny', status: 401 }
+      : signature === 'valid' ? (aiInput === 'block' ? { outcome: 'deny', status: 403 } : { outcome: 'verified', verified: true })
+      : route === 'public' && aiInput === 'allow'
+        ? { outcome: 'anonymous', verified: false, attributeIdentity: false, recordReaderConduct: false, charge: false }
+        : { outcome: 'deny', status: aiInput === 'charge' ? 402 : 403 };
+    expect(result).toMatchObject(expected);
+    if (signature === 'absent') expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('never treats a partial signature as anonymous', async () => {
+    const request = new Request('https://mysite.example/', { headers: { Signature: '' } });
+    expect(await admitAutomatedRead(request, { route: 'public', aiInput: 'allow' })).toMatchObject({ outcome: 'deny', status: 401 });
+  });
+
   it("verifica una request firmada segun draft-03 y devuelve agentKeyId para el ledger", async () => {
     const { privateKey, publicKeyX } = await generateKeyPair();
     mockDirectoryOnce(publicKeyX);
@@ -166,6 +193,9 @@ describe("verifyWebBotAuthRequest (middleware)", () => {
     });
     expect(result).toMatchObject({ verified: false, status: 503, reason: "resolution_budget_misconfigured" });
     expect(directoryFetcher).not.toHaveBeenCalled();
+    expect(await admitAutomatedRead(request, { route: 'public', aiInput: 'allow' }, {
+      resolutionBudget: { secret: 'synthetic-budget-secret-for-tests' }, directoryFetcher,
+    })).toMatchObject({ outcome: 'deny', status: 503, retryAfterSeconds: 1 });
   });
 
   it.each(["host", "verifier"] as const)("shares the same window quota when %s spends it first", async (first) => {
@@ -192,6 +222,9 @@ describe("verifyWebBotAuthRequest (middleware)", () => {
       expect(await fromHost()).toMatchObject({ ok: true });
       expect(await fromVerifier()).toMatchObject({ verified: false, status: 429, reason: "client_budget_exhausted" });
       expect(directoryFetcher).not.toHaveBeenCalled();
+      expect(await admitAutomatedRead(request, { route: 'public', aiInput: 'allow' }, {
+        directoryFetcher, resolutionBudget: { ingress, secret, budget },
+      })).toMatchObject({ outcome: 'deny', status: 429, retryAfterSeconds: 60 });
     } else {
       expect(await fromVerifier()).toMatchObject({ verified: true });
       expect(await fromHost()).toMatchObject({ ok: false, status: 429, error: "client_budget_exhausted" });
