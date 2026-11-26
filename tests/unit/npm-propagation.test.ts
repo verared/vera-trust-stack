@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { installWithPropagationRetries, publishAndWait, waitUntilPublished } from '../../scripts/npm-propagation.mjs';
+import { installWithPropagationRetries, publishAndWait, publishPackage, waitUntilPublished } from '../../scripts/npm-propagation.mjs';
 
 const name = '@verared/net';
 const version = '0.1.0-rc.1';
@@ -12,7 +12,7 @@ function clock() {
   return { now: () => elapsed, pause: vi.fn(async (ms: number) => { elapsed += ms; }) };
 }
 
-it('waits for the exact version, retrying missing or stale metadata every four seconds', async () => {
+it('waits for the exact version, retrying missing or stale metadata every ten seconds', async () => {
   const timer = clock();
   const npm = vi.fn().mockRejectedValueOnce(npmFailure('E404'))
     .mockResolvedValueOnce({ stdout: '0.1.0-alpha.2\n' })
@@ -20,15 +20,23 @@ it('waits for the exact version, retrying missing or stale metadata every four s
   await waitUntilPublished(name, version, { npm, ...timer });
   expect(npm).toHaveBeenCalledTimes(3);
   expect(npm.mock.calls[0][0].slice(0, 5)).toEqual(['view', `${name}@${version}`, 'version', '--registry', 'https://registry.npmjs.org']);
-  expect(timer.pause.mock.calls).toEqual([[4000], [4000]]);
+  expect(timer.pause.mock.calls).toEqual([[10_000], [10_000]]);
 });
 
-it('times out after 90 seconds if staging never becomes visible', async () => {
+it('times out after 300 seconds if staging never becomes visible', async () => {
   const timer = clock();
   const npm = vi.fn().mockRejectedValue(npmFailure('E404'));
-  await expect(waitUntilPublished(name, version, { npm, ...timer })).rejects.toThrow(`${name}@${version} still not visible`);
-  expect(timer.now()).toBe(90_000);
-  expect(npm.mock.lastCall?.[1].timeout).toBe(2000);
+  await expect(waitUntilPublished(name, version, { npm, ...timer })).rejects.toThrow(`${name}@${version} still not visible on https://registry.npmjs.org after 300 seconds`);
+  expect(timer.now()).toBe(300_000);
+  expect(npm.mock.lastCall?.[1].timeout).toBe(10_000);
+});
+
+it('publishes without waiting for registry visibility', async () => {
+  const npm = vi.fn().mockResolvedValue({ stdout: '', stderr: '' });
+  const wait = vi.fn();
+  await publishPackage(name, version, ['publish'], { npm, wait, log: vi.fn() });
+  expect(npm).toHaveBeenCalledTimes(1);
+  expect(wait).not.toHaveBeenCalled();
 });
 
 it('polls after publish success and recovers only the staged-version E409', async () => {
