@@ -1,6 +1,6 @@
 {
   "name": "@verared/reputation",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "description": "Deterministic G4 SVRI reputation engine: projection, eligibility, and static REP-01..REP-11 vector evaluator.",
   "type": "module",
   "license": "Apache-2.0",
