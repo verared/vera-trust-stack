@@ -14,17 +14,17 @@
 
 | Area | State | Evidence or open condition |
 |---|---|---|
-| Packages, boundaries and release | `[x]` | [Alpha.2 published; rc.1 prepares eight packages and 18 entrypoints](#phase-1--package-extraction-boundaries-and-release). |
+| Packages, boundaries and release | `[x]` | [rc.1 published; stable 0.1.0 prepared with eight packages and 18 entrypoints](#phase-1--package-extraction-boundaries-and-release). |
 | Signed-reader verification and egress | `[x]` | [Shared budget, replay checks, 13 real-signature ML-DSA tests](#phase-2--trust-layer-and-network-security); external ML-DSA audit remains open. |
 | APW, Witness Index and federation | `[~]` | [E-10/E-12/E-14/E-15 implementation](#phase-3--identity-witness-index-and-federation); no public fan-out endpoint or independent federation demonstrated. |
 | Composed identity and reputation | `[x]` | [AB-STATIC-01…07 and 117 reputation cases](#phase-4--local-trust-protocol-and-reputation); bounded static scope. |
 | Cloud Images and ATProto | `[x]` | [PNG embedding, external verification and optional handle/DID bridge](#phase-5--optional-image-and-at-protocol-adapters). |
-| Gatekeeper in a real host and B3 | `[~]` | [B3 accepted, implemented and matrix-tested](#phase-6--gatekeeper-in-real-consumers-and-b3); real host deployment evidence remains open. |
-| Registry publication | `[~]` | [Publication and exact-version registry smoke automated](#phase-7--npm-registry-publication); first rc.1 registry install pending. |
+| Gatekeeper in a real host and B3 | `[~]` | [First consumer integration merged](#phase-6--gatekeeper-in-real-consumers-and-b3); independent operator and deployment evidence remain open. |
+| Registry publication | `[x]` | [rc.1 exact-version registry install verified](#phase-7--npm-registry-publication); stable `latest` publication pending. |
 | Runtime smoke and CLI | `[x]` | [Public entrypoint probes and installed CLI conformance](#phase-8--runtime-parity-and-cli); broader deployment parity remains open. |
 | Independent review and image transport expansion | `[ ]` | [Reviewed dependency and signer interoperability](#phase-9--independent-security-and-ml-dsa-review); [R2 and non-PNG round trips](#phase-10--image-storage-and-format-expansion). |
 
-## Shipped: alpha.1 to alpha.2
+## Release history and evidence
 
 ### Phase 1 — Package extraction, boundaries and release
 
@@ -35,11 +35,12 @@
 - The P0 hardening on `main` moved trusted ingress, signing-key storage and ATProto storage to injected contracts. `check:boundaries` checks source and distributable artifacts, neutral runtime dependencies, layer/import boundaries, licensing and the exact [`SPEC-PIN.json`](./SPEC-PIN.json). The spec stays pinned to `7787966` (`v0.1.0-draft.1`), with the same tarball hash and five JCS digests.
 - [v0.1.0-alpha.2](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-alpha.2), `cc0b805`, passed **47 Vitest files, 614 tests, one opt-in live DoH test skipped**. `smoke:tarballs` imports all **17 public ESM entrypoints** from installed archives; `smoke:types` tests their emitted declarations under strict `NodeNext` and compiles the typed Gatekeeper consumer. These checks catch packaging and declaration failures that workspace-only tests miss.
 - The [tag workflow](./.github/workflows/release.yml) validates the tag and all package versions, checks the pinned spec and its tarball hash, runs build/boundaries/Vitest/both smokes, then validates seven `.tgz` files against `SHA256SUMS`. Only the publishing job can write the release. Alpha.2 shipped with all eight assets.
-- **v0.1.0-rc.1 is prepared for release:** eight packages and 18 public ESM/NodeNext entrypoints, including the Node-only CLI. The current tag workflow verifies eight tarballs and `SHA256SUMS`, then publishes the prerelease and, when configured, publishes to npm with provenance. The rc.1 tag and publication are pending.
+- [v0.1.0-rc.1](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-rc.1) ships eight packages and 18 public ESM/NodeNext entrypoints, including the Node-only CLI. A clean `smoke:npm` verified all eight exact versions on the public registry, imported all 18 entrypoints and exercised the CLI help.
+- **v0.1.0 is prepared, not published.** The tag workflow verifies eight tarballs and `SHA256SUMS`, creates a stable GitHub Release and, when configured, publishes to npm with provenance under `latest`. The stable package release retains the normative specification draft `v0.1.0-draft.1` and does not close S4, S6, G5 or the independent-operator gate.
 
 **Honest limits:** GitHub release archives and Node 24 checks do not demonstrate npm registry publication, Workers/Deno parity or live host integration. The API compile example is not a deployment test.
 
-**Exit criterion:** a clean Node 24 checkout installs from the lockfile and passes the five gates; a clean consumer verifies seven release checksums, imports all 17 entrypoints and passes the strict types smoke. The tag resolves to the checked release commit.
+**Exit criterion:** a clean Node 24 checkout installs from the lockfile and passes the release gates; a clean consumer verifies eight release checksums, imports all 18 entrypoints and passes the strict types smoke. The tag resolves to the checked release commit.
 
 ### Phase 2 — Trust Layer and network security
 
@@ -52,7 +53,7 @@
 - Directory resolution has positive/negative caching, single-flight per normalized origin and bounded concurrent cold work (eight fetches total, at most six for unreserved origins). The host controls origins eligible for reserved capacity. Sharing a budget removes an accounting split; it does not charge a new outbound attempt when no new fetch occurs or impose shared quotas across replicas.
 - `createSafeFetcher` bounds time, bytes and redirect hops. Use the proper resolver and pinned transport where a host requires DNS-rebinding protection; a fetch-only invocation is not a pinned Node connector. Witness and peer readers bound remote work; history resolution respects `maxPages` (hard ceiling 40) and does not verify a chain as complete when another page is required. Verify these limits using the [egress budget](./tests/unit/resolution-budget.test.ts), [directory admission](./tests/unit/directory-admission.test.ts) and [Web Bot Auth](./tests/unit/webbotauth-verify.test.ts) regressions.
 
-**Honest limits:** no independent audit of the ML-DSA dependency or integration, and no recorded run with a real external ML-DSA agent. A bounded directory lookup is not inbound request admission, and the similarly named `site-trust` verifier is not the shared-budget entrypoint. B3 behavior is unchanged.
+**Honest limits:** no independent audit of the ML-DSA dependency or integration, and no recorded run with a real external ML-DSA agent. A bounded directory lookup is not inbound request admission, and the similarly named `site-trust` verifier is not the shared-budget entrypoint. Automated-read admission is handled separately by B3.
 
 **Exit criterion:** tests reproduce failure before directory egress on bad configuration, mandatory nonce and replay rejection, and shared window accounting in both call orders (host first, verifier first). On real consumers, separately verify DNS/transport capabilities and nonce-store behavior across replicas before claiming them.
 
@@ -94,7 +95,7 @@ G4 implements 117 audited cases across REP-01…REP-11, including issuer eligibi
 
 **Exit criterion:** an external consumer verifies standalone image sidecars through valid key rotation and rejects modified payloads/chunks/hashes, and can distinguish confirmed ATProto linkage, mismatches, unavailable resolution and `no_data` without converting them into positive trust.
 
-## Toward v0.1.0-rc.1 and v0.1.0
+## Adoption and remaining evidence
 
 ### Phase 6 — Gatekeeper in real consumers and B3
 
@@ -104,15 +105,17 @@ G4 implements 117 audited cases across REP-01…REP-11, including issuer eligibi
 
 **B3 / ADR 0003:** the [accepted policy](./docs/decisions/ADR-0003-b3-unsigned-readers.md) is implemented and matrix-tested in `admitAutomatedRead`. Only an explicitly public route with `ai_input=allow` and no signature headers can admit an anonymous read, without identity attribution, reputation or billing. Invalid signatures never fall back to anonymous access.
 
+**Consumer evidence:** the first host merged [the Gatekeeper/B3 runtime integration](https://github.com/geroiloyola/portaless/pull/137) and [migrated seven runtime libraries to registry-pinned rc.1](https://github.com/geroiloyola/portaless/pull/139). These are records of consumer code integration; they do not establish live enforcement, independent conformance or a second operator.
+
 **Honest limits:** the example type-checks but does not deploy a policy or a host. Consumers must wire the admission API to their trusted route classification and still authorize verified readers and enforce settlement.
 
-**Exit criterion:** record a real host integration that tests trusted and missing ingress, pre-auth budgets across directory/TXT/DID/history/evidence, nonce behavior, verified/unavailable identity and approved/denied policy. Exercise the accepted B3 matrix end to end, with signed and quota-failure controls. A verified proof or projection alone must never grant access.
+**Exit criterion:** record deployed host evidence for trusted and missing ingress, pre-auth budgets across directory/TXT/DID/history/evidence, nonce behavior, verified/unavailable identity and approved/denied policy. Exercise the accepted B3 matrix end to end, with signed and quota-failure controls. A verified proof or projection alone must never grant access.
 
 ### Phase 7 — npm registry publication
 
 **Goal:** make one coherent package version independently installable through `npmjs.com`.
 
-**Status:** `[~]` The tag workflow publishes verified tarballs with provenance in dependency order: `net`, `apw`, `local-trust`, `reputation`, `trust-layer`, `cloud-images`, `identity-atproto`, `cli`. Prereleases use `next`; `smoke:npm` installs exact versions from the public registry. Registry evidence for rc.1 awaits the release run.
+**Status:** `[x]` All eight `0.1.0-rc.1` packages passed the exact-version install from `registry.npmjs.org`. The tag workflow publishes verified tarballs with provenance in dependency order: `net`, `apw`, `local-trust`, `reputation`, `trust-layer`, `cloud-images`, `identity-atproto`, `cli`. Prereleases use `next`; the stable `0.1.0` cut selects `latest`. `smoke:npm` waits for all exact versions to appear and retries install on propagation errors; the stable registry run awaits publication.
 
 **Honest limits:** a local tarball override can hide missing registry packages or version metadata. A release tag does not prove registry availability.
 

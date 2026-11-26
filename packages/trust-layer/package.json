@@ -1,6 +1,6 @@
 {
   "name": "@verared/trust-layer",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "description": "Neutral Trust Layer: Web Bot Auth (Ed25519 + ML-DSA), Content Signals access policies, SiteTrustScore/SVRI, pay-per-crawl, and traceability ledger.",
   "type": "module",
   "license": "Apache-2.0",
@@ -48,8 +48,8 @@
   },
   "dependencies": {
     "@noble/post-quantum": "^0.5.0",
-    "@verared/apw": "0.1.0-rc.1",
-    "@verared/net": "0.1.0-rc.1",
+    "@verared/apw": "0.1.0",
+    "@verared/net": "0.1.0",
     "web-bot-auth": "^0.1.0"
   }
 }

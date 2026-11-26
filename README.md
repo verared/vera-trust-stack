@@ -34,7 +34,7 @@ APW resolves domain-backed identities and verifies signed artifacts and history.
 
 Host applications supply ingress, persistence, policy and settlement adapters. Web Bot Auth can authenticate a signed automated reader; content policies express `allow`, `block` or `charge` for AI input. Search and training preferences are cooperative signals. The libraries provide verification and policy primitives; the host decides how to enforce them and expose public or governed responses.
 
-## Packages (`0.1.0-alpha.2`)
+## Packages (`0.1.0`)
 
 | Layer | Package | Public entrypoints | Purpose | Runtime |
 |---|---|---|---|---|
@@ -45,53 +45,49 @@ Host applications supply ingress, persistence, policy and settlement adapters. W
 | **L2** | [`@verared/trust-layer`](./packages/trust-layer) | `.`, `./site-trust`, `./policy`, `./billing`, `./ledger`, `./net` | Web Bot Auth, policy, budgets, usage and settlement interfaces | Node 24 baseline |
 | **L2** | [`@verared/cloud-images`](./packages/cloud-images) | `.` | Signed image sidecars and verification | Node 24 baseline |
 | **L2** | [`@verared/identity-atproto`](./packages/identity-atproto) | `.` | AT Protocol identity resolution and links to APW evidence | Node 24 baseline |
+| **L2** | [`@verared/cli`](./packages/cli) | `.`; `verared` binary | Verify an APW identity binding or run specification vectors | Node-only |
 
-All **7 packages and 17 public entrypoints** ship ESM and TypeScript declarations checked with strict `NodeNext`. The Web-API import boundary is not a claim of deployment parity across Workers and Deno; see the [roadmap](./ROADMAP.md).
-
-Development also includes [`@verared/cli`](./packages/cli), a Node-only command-line verifier with `verify` and `conformance`. It is the eighth workspace package and is not part of the published alpha.2 assets listed below. See the [runtime smoke matrix](./docs/RUNTIME-PARITY.md) for the tested surfaces.
+All **8 packages and 18 public entrypoints** ship ESM and TypeScript declarations checked with strict `NodeNext`. See the [runtime smoke matrix](./docs/RUNTIME-PARITY.md) for the tested surfaces.
 
 ---
 
+## Install from npm
+
+Use Node 24. The eight `0.1.0-rc.1` packages are available on [npmjs.com](https://www.npmjs.com/package/@verared/trust-layer/v/0.1.0-rc.1). The stable `0.1.0` cut is prepared; the commands below target the stable release **once the tag workflow publishes it**:
+
+```bash
+npm install @verared/trust-layer
+npm install --save-exact @verared/trust-layer@0.1.0
+npx @verared/cli@0.1.0 --help
+```
+
+Choose either install command. Pin other directly consumed `@verared/*` packages to the same version and commit the consumer lockfile. To use the already published release candidate, specify `@0.1.0-rc.1` explicitly.
+
 ## Consuming via GitHub Release Tarballs (No Registry Token Required)
 
-Use Node 24 and take all seven archives from the same [published `v0.1.0-alpha.2` prerelease](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-alpha.2). To verify and install exactly the bytes you checked, run this in an empty consumer directory:
+Take all eight archives from the same release. The example targets `v0.1.0` once published; use `version=0.1.0-rc.1` to verify the [published release candidate](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-rc.1) today. Run in an empty consumer directory:
 
 ```bash
 set -e
-release=https://github.com/verared/vera-trust-stack/releases/download/v0.1.0-alpha.2
+version=0.1.0
+release="https://github.com/verared/vera-trust-stack/releases/download/v$version"
 mkdir vendor
 curl -fsSL "$release/SHA256SUMS" -o vendor/SHA256SUMS
-for pkg in net apw local-trust reputation trust-layer cloud-images identity-atproto; do
-  filename="verared-$pkg-0.1.0-alpha.2.tgz"
+packages=(net apw local-trust reputation trust-layer cloud-images identity-atproto cli)
+for pkg in "${packages[@]}"; do
+  filename="verared-$pkg-$version.tgz"
   curl -fsSL "$release/$filename" -o "vendor/$filename"
 done
 (cd vendor && sha256sum -c --strict SHA256SUMS)
+npm init -y
+for pkg in "${packages[@]}"; do
+  npm pkg set "dependencies.@verared/$pkg=file:vendor/verared-$pkg-$version.tgz" \
+    "overrides.@verared/$pkg=\$@verared/$pkg"
+done
+npm install
 ```
 
-Use the following `package.json`. The overrides keep transitive workspace dependencies on the same local archives. Run `npm install` once to create the lockfile, then use `npm ci` with that lockfile and the verified archives:
-
-```json
-{
-  "dependencies": {
-    "@verared/net": "file:vendor/verared-net-0.1.0-alpha.2.tgz",
-    "@verared/apw": "file:vendor/verared-apw-0.1.0-alpha.2.tgz",
-    "@verared/local-trust": "file:vendor/verared-local-trust-0.1.0-alpha.2.tgz",
-    "@verared/reputation": "file:vendor/verared-reputation-0.1.0-alpha.2.tgz",
-    "@verared/trust-layer": "file:vendor/verared-trust-layer-0.1.0-alpha.2.tgz",
-    "@verared/cloud-images": "file:vendor/verared-cloud-images-0.1.0-alpha.2.tgz",
-    "@verared/identity-atproto": "file:vendor/verared-identity-atproto-0.1.0-alpha.2.tgz"
-  },
-  "overrides": {
-    "@verared/net": "$@verared/net",
-    "@verared/apw": "$@verared/apw",
-    "@verared/local-trust": "$@verared/local-trust",
-    "@verared/reputation": "$@verared/reputation",
-    "@verared/trust-layer": "$@verared/trust-layer",
-    "@verared/cloud-images": "$@verared/cloud-images",
-    "@verared/identity-atproto": "$@verared/identity-atproto"
-  }
-}
-```
+The overrides keep transitive workspace dependencies on the same verified archives. Keep the lockfile and archives together and use `npm ci` for subsequent installs.
 
 ---
 
@@ -101,12 +97,13 @@ Run `npm ci` with Node 24. For the vector tests, check out the exact specificati
 
 | Gate | Evidence |
 |---|---|
-| `npm run build` | Seven packages compile to ESM and declarations. |
+| `npm run build` | Eight packages compile to ESM and declarations. |
 | `npm run check:boundaries` | License, package DAG, host neutrality, Web-API import graphs and exact specification pin. |
-| `npm test -- --maxWorkers=2` | Alpha.2 baseline: 47 files, 614 passing tests and one opt-in live DoH test skipped. |
-| `npm run smoke:tarballs` | An isolated consumer imports all 17 ESM entrypoints. |
-| `npm run smoke:types` | All 17 entrypoints and the Gatekeeper consumer compile with strict `NodeNext` from the tarballs. |
-| `npm run pack:release` | Seven versioned `.tgz` files and `SHA256SUMS` in a clean output directory; the [tag workflow](./.github/workflows/release.yml) gates and publishes the assets. |
+| `npm test -- --maxWorkers=2` | Unit, policy and pinned specification vector coverage; live DoH is opt-in. |
+| `npm run smoke:tarballs` | An isolated consumer imports all 18 ESM entrypoints and runs CLI conformance. |
+| `npm run smoke:types` | All 18 entrypoints and the Gatekeeper consumer compile with strict `NodeNext` from the tarballs. |
+| `npm run smoke:runtimes -- --require-deno` | Imports and APW Ed25519 verification on Node 24, Workers and Deno, subject to the runtime matrix. |
+| `npm run pack:release` | Eight versioned `.tgz` files and `SHA256SUMS` in a clean output directory; the [tag workflow](./.github/workflows/release.yml) gates and publishes the assets. |
 
 ## Gatekeeper integration
 
@@ -118,7 +115,7 @@ The [accepted B3 ADR](./docs/decisions/ADR-0003-b3-unsigned-readers.md) describe
 
 ## Release and integration status
 
-- **Shipped:** [alpha.2 package and release evidence](./ROADMAP.md#phase-1--package-extraction-boundaries-and-release), [signed-reader security](./ROADMAP.md#phase-2--trust-layer-and-network-security) and [bounded identity and reputation scope](./ROADMAP.md#phase-4--local-trust-protocol-and-reputation).
-- **To demonstrate before broader claims:** [real Gatekeeper and B3 coverage](./ROADMAP.md#phase-6--gatekeeper-in-real-consumers-and-b3), [registry installation](./ROADMAP.md#phase-7--npm-registry-publication), [runtime parity and CLI](./ROADMAP.md#phase-8--runtime-parity-and-cli) and [independent ML-DSA review](./ROADMAP.md#phase-9--independent-security-and-ml-dsa-review). The Node 24 fixtures do not establish those results.
+- **Verified:** [rc.1 packages on the public registry](./ROADMAP.md#phase-7--npm-registry-publication), [Gatekeeper/B3 integration in a consumer](./ROADMAP.md#phase-6--gatekeeper-in-real-consumers-and-b3) and [runtime and CLI smoke coverage](./ROADMAP.md#phase-8--runtime-parity-and-cli).
+- **Still open:** `0.1.0` publication, broader deployment parity, [independent ML-DSA review](./ROADMAP.md#phase-9--independent-security-and-ml-dsa-review) and the specification's independent conformance milestones. A stable library release does not change the draft specification pin.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for DCO (`Signed-off-by`) requirements.

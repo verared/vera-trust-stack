@@ -1,6 +1,6 @@
 {
   "name": "@verared/net",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "description": "Neutral network safety, SSRF/DNS-rebinding guards, egress budgets, and client-IP trust rules (Web-API pure, L0-net).",
   "type": "module",
   "license": "Apache-2.0",
