@@ -1,6 +1,6 @@
 {
   "name": "@verared/cli",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-rc.1",
   "description": "Node command-line verification of APW identities and specification vectors.",
   "type": "module",
   "license": "Apache-2.0",
@@ -16,5 +16,5 @@
   "bin": { "verared": "./dist/cli.js" },
   "files": ["dist", "LICENSE", "README.md"],
   "engines": { "node": ">=24" },
-  "dependencies": { "@verared/apw": "0.1.0-alpha.2" }
+  "dependencies": { "@verared/apw": "0.1.0-rc.1" }
 }

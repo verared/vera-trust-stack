@@ -1,6 +1,6 @@
 {
   "name": "@verared/identity-atproto",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-rc.1",
   "description": "AT Protocol handle/DID resolution (did:plc/did:web) and optional APW reputation bridge.",
   "type": "module",
   "license": "Apache-2.0",
@@ -28,6 +28,6 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@verared/apw": "0.1.0-alpha.2"
+    "@verared/apw": "0.1.0-rc.1"
   }
 }

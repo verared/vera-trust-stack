@@ -14,13 +14,14 @@
 
 | Area | State | Evidence or open condition |
 |---|---|---|
-| Packages, boundaries and release | `[x]` | [Seven packages, 17 entrypoints, 614 passing tests at alpha.2](#phase-1--package-extraction-boundaries-and-release). |
+| Packages, boundaries and release | `[x]` | [Alpha.2 published; rc.1 prepares eight packages and 18 entrypoints](#phase-1--package-extraction-boundaries-and-release). |
 | Signed-reader verification and egress | `[x]` | [Shared budget, replay checks, 13 real-signature ML-DSA tests](#phase-2--trust-layer-and-network-security); external ML-DSA audit remains open. |
 | APW, Witness Index and federation | `[~]` | [E-10/E-12/E-14/E-15 implementation](#phase-3--identity-witness-index-and-federation); no public fan-out endpoint or independent federation demonstrated. |
 | Composed identity and reputation | `[x]` | [AB-STATIC-01…07 and 117 reputation cases](#phase-4--local-trust-protocol-and-reputation); bounded static scope. |
 | Cloud Images and ATProto | `[x]` | [PNG embedding, external verification and optional handle/DID bridge](#phase-5--optional-image-and-at-protocol-adapters). |
-| Gatekeeper in a real host and B3 | `[~]` | [Typed consumer and quota tests](#phase-6--gatekeeper-in-real-consumers-and-b3); deployment and B3 decision open. |
-| Registry, runtime parity, CLI | `[ ]` | [External install](#phase-7--npm-registry-publication) and [per-entrypoint runtime runs](#phase-8--runtime-parity-and-cli) pending. |
+| Gatekeeper in a real host and B3 | `[~]` | [B3 accepted, implemented and matrix-tested](#phase-6--gatekeeper-in-real-consumers-and-b3); real host deployment evidence remains open. |
+| Registry publication | `[~]` | [Publication and exact-version registry smoke automated](#phase-7--npm-registry-publication); first rc.1 registry install pending. |
+| Runtime smoke and CLI | `[x]` | [Public entrypoint probes and installed CLI conformance](#phase-8--runtime-parity-and-cli); broader deployment parity remains open. |
 | Independent review and image transport expansion | `[ ]` | [Reviewed dependency and signer interoperability](#phase-9--independent-security-and-ml-dsa-review); [R2 and non-PNG round trips](#phase-10--image-storage-and-format-expansion). |
 
 ## Shipped: alpha.1 to alpha.2
@@ -34,6 +35,7 @@
 - The P0 hardening on `main` moved trusted ingress, signing-key storage and ATProto storage to injected contracts. `check:boundaries` checks source and distributable artifacts, neutral runtime dependencies, layer/import boundaries, licensing and the exact [`SPEC-PIN.json`](./SPEC-PIN.json). The spec stays pinned to `7787966` (`v0.1.0-draft.1`), with the same tarball hash and five JCS digests.
 - [v0.1.0-alpha.2](https://github.com/verared/vera-trust-stack/releases/tag/v0.1.0-alpha.2), `cc0b805`, passed **47 Vitest files, 614 tests, one opt-in live DoH test skipped**. `smoke:tarballs` imports all **17 public ESM entrypoints** from installed archives; `smoke:types` tests their emitted declarations under strict `NodeNext` and compiles the typed Gatekeeper consumer. These checks catch packaging and declaration failures that workspace-only tests miss.
 - The [tag workflow](./.github/workflows/release.yml) validates the tag and all package versions, checks the pinned spec and its tarball hash, runs build/boundaries/Vitest/both smokes, then validates seven `.tgz` files against `SHA256SUMS`. Only the publishing job can write the release. Alpha.2 shipped with all eight assets.
+- **v0.1.0-rc.1 is prepared for release:** eight packages and 18 public ESM/NodeNext entrypoints, including the Node-only CLI. The current tag workflow verifies eight tarballs and `SHA256SUMS`, then publishes the prerelease and, when configured, publishes to npm with provenance. The rc.1 tag and publication are pending.
 
 **Honest limits:** GitHub release archives and Node 24 checks do not demonstrate npm registry publication, Workers/Deno parity or live host integration. The API compile example is not a deployment test.
 
@@ -100,27 +102,29 @@ G4 implements 117 audited cases across REP-01…REP-11, including issuer eligibi
 
 **Status:** `[~]` The [alpha.2 migration guide](./docs/MIGRATION-v0.1.0-alpha.2.md) and [typed consumer](./scripts/fixtures/gatekeeper.mts) show the root Web Bot Auth verifier with one shared window budget, trusted signer-to-reader-DID binding, bounded `local-trust` acquisition/verification, host admission of evidence, `reputation` projection and `apw/scoring` read policy. The host wires its outbound stages to the shared budget; the separate per-operation cap still applies. Keep reader scores separate from site projections, and preserve operational `429`/`503` responses and `Retry-After` where available.
 
-**Honest limits:** the example type-checks but does not deploy a policy or a host. B3 / ADR 0003 is open: absent signature material and invalid signatures are not equivalent, and neither implies an entitlement to a governed resource. Alpha.2 leaves host behavior unchanged. Any approved anonymous read must be limited to explicitly public resources and provides no identity attribution, reputation or billing.
+**B3 / ADR 0003:** the [accepted policy](./docs/decisions/ADR-0003-b3-unsigned-readers.md) is implemented and matrix-tested in `admitAutomatedRead`. Only an explicitly public route with `ai_input=allow` and no signature headers can admit an anonymous read, without identity attribution, reputation or billing. Invalid signatures never fall back to anonymous access.
 
-**Exit criterion:** record a real host integration that tests trusted and missing ingress, pre-auth budgets across directory/TXT/DID/history/evidence, nonce behavior, verified/unavailable identity and approved/denied policy. Record an explicit B3 decision and pass the `allow/block/charge × absent/invalid signature × public/governed route` matrix, with signed and quota-failure controls. A verified proof or projection alone must never grant access.
+**Honest limits:** the example type-checks but does not deploy a policy or a host. Consumers must wire the admission API to their trusted route classification and still authorize verified readers and enforce settlement.
+
+**Exit criterion:** record a real host integration that tests trusted and missing ingress, pre-auth budgets across directory/TXT/DID/history/evidence, nonce behavior, verified/unavailable identity and approved/denied policy. Exercise the accepted B3 matrix end to end, with signed and quota-failure controls. A verified proof or projection alone must never grant access.
 
 ### Phase 7 — npm registry publication
 
 **Goal:** make one coherent package version independently installable through `npmjs.com`.
 
-**Status:** `[ ]` GitHub release artifacts and public npm metadata exist. Confirm the scope and publication permissions, and publish in dependency order: `net` first; `apw` and `local-trust` after `net`; `reputation` independently; `trust-layer`, `cloud-images` and `identity-atproto` after their dependencies. Keep internal versions and the specification pin coherent.
+**Status:** `[~]` The tag workflow publishes verified tarballs with provenance in dependency order: `net`, `apw`, `local-trust`, `reputation`, `trust-layer`, `cloud-images`, `identity-atproto`, `cli`. Prereleases use `next`; `smoke:npm` installs exact versions from the public registry. Registry evidence for rc.1 awaits the release run.
 
 **Honest limits:** a local tarball override can hide missing registry packages or version metadata. A release tag does not prove registry availability.
 
-**Exit criterion:** record the exact registry versions and integrity from a clean external install without workspace links or tarball overrides; verify all 17 ESM entrypoints and the strict `NodeNext` Gatekeeper example against those registry packages.
+**Exit criterion:** record exact registry versions and integrity from a clean external install without workspace links or tarball overrides. The automated registry smoke imports all 18 ESM entrypoints and checks CLI help; strict `NodeNext` and the Gatekeeper consumer are checked from the verified release archives.
 
 ### Phase 8 — Runtime parity and CLI
 
 **Goal:** apply E-05 to the stack through a runtime-by-entrypoint compatibility matrix and an independently installable CLI.
 
-**Status:** `[ ]` Node 24 is the verified baseline. Workers and Deno need real runtime runs for import, crypto, DNS/egress, timeout, cancellation and stream behavior. Keep zero `node:*` imports in the two protected Web-API surfaces. Define the first `@verared/cli` commands for verification and corpus checks. A possible `community attester` signer should keep key material local, without asking an emitter to paste a private key into a browser.
+**Status:** `[x]` The [runtime smoke](./docs/RUNTIME-PARITY.md) covers imports and APW Ed25519 verification: 18 entrypoints in Node 24 and 16 each in Workers and Deno. The [Node-only CLI](./packages/cli/README.md) ships `verify` and `conformance`; a clean tarball install exercises help and all 110 pinned APW cases. The protected Web-API surfaces retain zero `node:*` imports.
 
-**Honest limits:** a neutral import graph is not transport or cryptographic parity. The bounded Node G2 connector cannot be advertised as equivalent in another runtime without evidence and its own approved scope. The old conformance CLI is historical; it is not a binary in the current seven archives.
+**Honest limits:** the probe does not establish live DNS/egress, timeout, cancellation, stream, storage or ML-DSA parity. The bounded G2 connector and CLI remain Node-only. CLI signing is outside the current commands.
 
 **Exit criterion:** publish actual Node 24, Workers and Deno results per supported entrypoint, including explicit unsupported cases, and run a packed CLI from a clean external install against versioned positive/negative fixtures. If signing is approved, demonstrate key isolation, signature verification and non-leakage from supported invocations.
 

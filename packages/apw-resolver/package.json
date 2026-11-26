@@ -1,6 +1,6 @@
 {
   "name": "@verared/apw",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-rc.1",
   "description": "Protocol APW resolver, did:apw identity/history verification, scoring primitives, and federation helpers.",
   "type": "module",
   "license": "Apache-2.0",
@@ -48,7 +48,7 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@verared/net": "0.1.0-alpha.2",
+    "@verared/net": "0.1.0-rc.1",
     "canonicalize": "^2.0.0"
   }
 }
