@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { npmReleasePlan, registry } from './npm-release-plan.mjs';
+import { installWithPropagationRetries, waitUntilPublished } from './npm-propagation.mjs';
 
 const plan = npmReleasePlan();
 const dir = mkdtempSync(join(tmpdir(), 'verared-npm-smoke-'));
@@ -10,7 +11,12 @@ try {
   writeFileSync(join(dir, 'package.json'), JSON.stringify({
     private: true, type: 'module', dependencies: Object.fromEntries(plan.map(({ name, version }) => [name, version])),
   }));
-  execFileSync('npm', ['install', '--registry', registry, '--prefer-online', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' });
+  await Promise.all(plan.map(({ name, version }) => waitUntilPublished(name, version)));
+  const { stdout, stderr } = await installWithPropagationRetries(
+    ['install', '--registry', registry, '--prefer-online', '--no-audit', '--no-fund'], { cwd: dir },
+  );
+  if (stdout) process.stdout.write(stdout);
+  if (stderr) process.stderr.write(stderr);
   const { packages } = JSON.parse(readFileSync(join(dir, 'package-lock.json'), 'utf8'));
   const expected = new Map(plan.map((pkg) => [pkg.name, pkg.version]));
   for (const [key, info] of Object.entries(packages)) {

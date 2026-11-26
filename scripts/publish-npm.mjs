@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { npmReleasePlan, registry } from './npm-release-plan.mjs';
+import { publishAndWait, waitUntilPublished } from './npm-propagation.mjs';
 
 const [mode, input, ...extra] = process.argv.slice(2);
 const dryRun = mode === '--dry-run' && input === undefined;
@@ -40,13 +41,14 @@ try {
     if (response.ok) {
       const existing = await response.json();
       if (existing.name !== name || existing.version !== version) throw new Error(`Unexpected registry metadata for ${name}@${version}`);
+      await waitUntilPublished(name, version);
       console.log(`[skip] ${name}@${version} already exists`);
       continue;
     }
     if (response.status !== 404) throw new Error(`Cannot check ${name}@${version}: registry returned ${response.status}`);
-    execFileSync('npm', ['publish', join(dir, filename), '--registry', registry, '--access', 'public', '--provenance', '--tag', tag], {
-      stdio: 'inherit',
-    });
+    await publishAndWait(name, version, [
+      'publish', join(dir, filename), '--registry', registry, '--access', 'public', '--provenance', '--tag', tag,
+    ]);
   }
 } finally {
   if (dryRun) rmSync(dir, { recursive: true, force: true });
