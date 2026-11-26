@@ -14,6 +14,8 @@ Upgrade all seven packages as a set. The spec pin stays at `v0.1.0-draft.1` (`77
 
 ## B3 / ADR 0003: missing and invalid signatures
 
+**After alpha.2:** the [accepted ADR 0003](./decisions/ADR-0003-b3-unsigned-readers.md) is implemented and matrix-tested by `admitAutomatedRead`. The historical guidance below describes alpha.2 only.
+
 **No behavior changes in this release.** The root verifier returns `verified: false` with `missing_signature_agent_header` or `missing_signature_headers` on missing signature material; it doesn't decide `ai_input` or grant public access. A partial or malformed signing attempt must not be treated as an unsigned request eligible for a fallback. `isPublicBotRoute` is a classifier, not an authorization decision.
 
 The historical host rule reported in the [runtime integration proposal](https://github.com/verared/vera-trust-spec/blob/03728bc88e123e177ff4d0053bd93366f478231e/architecture/ltp-runtime-integration-proposal.md#6-b3-behavior-and-migration) rejects unsigned bot-like traffic before policy, even when `ai_input=allow`. Keep that rule unless ADR 0003 explicitly approves an exception. The following matrix is the recommended **optional future policy**, for bot-like requests sent through the policy gate; existing routing outside that gate is unchanged.

@@ -48,6 +48,8 @@ Host applications supply ingress, persistence, policy and settlement adapters. W
 
 All **7 packages and 17 public entrypoints** ship ESM and TypeScript declarations checked with strict `NodeNext`. The Web-API import boundary is not a claim of deployment parity across Workers and Deno; see the [roadmap](./ROADMAP.md).
 
+Development also includes [`@verared/cli`](./packages/cli), a Node-only command-line verifier with `verify` and `conformance`. It is the eighth workspace package and is not part of the published alpha.2 assets listed below. See the [runtime smoke matrix](./docs/RUNTIME-PARITY.md) for the tested surfaces.
+
 ---
 
 ## Consuming via GitHub Release Tarballs (No Registry Token Required)
@@ -111,6 +113,8 @@ Run `npm ci` with Node 24. For the vector tests, check out the exact specificati
 Use the root `@verared/trust-layer` verifier with a trusted ingress resolver and a shared `ResolutionBudget` for host-controlled egress. Bind the verified signing key to the reader's DID before calling the bounded identity verifier in `@verared/local-trust`. Admit evidence under the appropriate profile, keep reader scores separate from public site projections in `@verared/reputation`, then evaluate the read policy with `@verared/apw/scoring`. A valid proof or public level alone does not grant access. Keep unavailable verification distinct from invalid credentials; the unsigned-reader rule was not changed by alpha.2.
 
 See the [migration and wiring guide](./docs/MIGRATION-v0.1.0-alpha.2.md) for exact signatures, fail-closed behavior and the B3 decision boundary.
+
+The [accepted B3 ADR](./docs/decisions/ADR-0003-b3-unsigned-readers.md) describes the admission API added after alpha.2. The tag workflow can also publish the verified archives to npm in dependency order and run an isolated registry smoke when `NPM_TOKEN` is configured. To validate packaging and order locally, run `node scripts/publish-npm.mjs --dry-run`.
 
 ## Release and integration status
 

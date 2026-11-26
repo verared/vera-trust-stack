@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Build all 7 @verared/* packages to dist/
+      - name: Build all 8 @verared/* packages to dist/
         run: npm run build
 
       - name: Verify stack boundaries, licenses, and SPEC-PIN
@@ -42,8 +42,16 @@ jobs:
           VERARED_SPEC_DIR: ${{ github.workspace }}/.spec-pin-checkout/spec
         run: npm test
 
-      - name: Smoke test all 7 @verared/* release tarballs in isolated consumer
+      - name: Smoke test all 8 @verared/* release tarballs in isolated consumer
         run: npm run smoke:tarballs
+        env:
+          VERARED_SPEC_DIR: ${{ github.workspace }}/.spec-pin-checkout/spec
 
       - name: Check published declarations in a strict NodeNext consumer
         run: npm run smoke:types
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.6
+      - name: Verify Node, Workers and Deno runtime parity
+        run: npm run smoke:runtimes -- --require-deno

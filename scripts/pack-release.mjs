@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Apache-2.0. Packs all 7 @verared/* release tarballs + SHA256SUMS into a target directory outside the repo.
+// Apache-2.0. Packs all @verared/* release tarballs + SHA256SUMS into a target directory outside the repo.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,5 +28,5 @@ for (const dir of packages) {
   sums.push(`${sha}  ${filename}`);
 }
 writeFileSync(join(outDir, 'SHA256SUMS'), sums.join('\n') + '\n', 'utf8');
-console.log(`[pack-release] Packed 7 tarballs + SHA256SUMS into ${outDir}`);
+console.log(`[pack-release] Packed ${packages.length} tarballs + SHA256SUMS into ${outDir}`);
 console.log(sums.join('\n'));

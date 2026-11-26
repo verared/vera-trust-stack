@@ -19,6 +19,7 @@ const EXPECTED_PACKAGES = new Map([
   ['trust-layer', { name: '@verared/trust-layer', layer: 2 }],
   ['cloud-images', { name: '@verared/cloud-images', layer: 2 }],
   ['identity-atproto', { name: '@verared/identity-atproto', layer: 2 }],
+  ['cli', { name: '@verared/cli', layer: 2 }],
 ]);
 
 const NAME_TO_DIR = new Map([...EXPECTED_PACKAGES.entries()].map(([dir, m]) => [m.name, dir]));
@@ -70,6 +71,9 @@ for (const [dir, meta] of EXPECTED_PACKAGES) {
     continue;
   }
   if (!existsSync(licPath)) fail(`Missing packages/${dir}/LICENSE`);
+  else if (existsSync(resolve(root, 'LICENSE')) && !readFileSync(licPath).equals(readFileSync(resolve(root, 'LICENSE')))) {
+    fail(`packages/${dir}/LICENSE must match the root license`);
+  }
   const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
   if (pkg.name !== meta.name) fail(`packages/${dir}/package.json name must be ${meta.name}, got ${pkg.name}`);
   if (pkg.license !== 'Apache-2.0') fail(`packages/${dir}/package.json license must be Apache-2.0, got ${pkg.license}`);
@@ -182,4 +186,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('[check-stack-boundaries] OK — 7 Apache-2.0 packages, DAG, host neutrality, Web-API graphs, exact SPEC-PIN.');
+console.log(`[check-stack-boundaries] OK — ${EXPECTED_PACKAGES.size} Apache-2.0 packages, DAG, host neutrality, Web-API graphs, exact SPEC-PIN.`);

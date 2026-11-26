@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildSiteSvri, projectSvri } from "../../packages/apw-resolver/src/scoring/svri";
-import { runVector } from "../../packages/apw-resolver/conformance/run";
+import { runVector } from "../../packages/cli/src/conformance";
 
 const root = join(__dirname, "../..");
 const fixture = JSON.parse(readFileSync(join(resolveSpecDir(), "vectors/svri/v1.0/svri-projection.json"), "utf8"));

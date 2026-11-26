@@ -3,13 +3,13 @@
  *
  * Executes the machine-readable test vectors of `APW-VECTORS-v1.3` against the
  * published surface of `@verared/apw` and nothing else. That
- * constraint is the whole point: this module imports ONLY from `../src/standalone`
+ * constraint is the whole point: this module imports ONLY from `@verared/apw`
  * (the package entry), never from an internal path. If a function the spec
  * requires is not exported publicly, this runner fails to compile and the suite
  * fails -- which is the correct outcome, because it is exactly the information a
  * third-party implementer needs: the published package is not sufficient yet.
  *
- * The vectors themselves live in `docs/protocol-apw/vectors/v1.3/` and are
+ * The vectors live under `spec/vectors/` in the specification repository and are
  * independent of the code. Nothing here invents an expected value; every
  * expectation is transcribed from the spec.
  */
@@ -39,11 +39,11 @@ import {
   SVRI_VERSION,
   SVRI_SITE_PROFILE,
   projectSvri,
-} from "../src/standalone";
+} from "@verared/apw";
 
 // Imported for the reachability assertion below: these are constants a vector
 // asserts, so their presence is part of the public contract.
-import * as apw from "../src/standalone";
+import * as apw from "@verared/apw";
 
 export type CaseStatus = "pass" | "fail" | "unsupported";
 
@@ -518,7 +518,7 @@ const EXECUTORS: Record<string, Executor> = {
       problems.push(`passes ${result.passes} != ${c.expectPasses}`);
     }
     if (Array.isArray(c.expectRows)) {
-      const pick = (r: Record<string, unknown>) => ({ iss: String(r.iss), val: r.val as number, iat: r.iat as number });
+      const pick = (r: { iss?: unknown; val?: unknown; iat?: unknown }) => ({ iss: String(r.iss), val: r.val as number, iat: r.iat as number });
       const byIss = (a: { iss: string }, b: { iss: string }) => (a.iss < b.iss ? -1 : a.iss > b.iss ? 1 : 0);
       const got = result.rows.map(pick).sort(byIss);
       const want = (c.expectRows as Array<Record<string, unknown>>).map(pick).sort(byIss);
@@ -532,7 +532,7 @@ const EXECUTORS: Record<string, Executor> = {
 
 /**
  * Runs one vector file against the public surface.
- * `raw` is the parsed JSON of a file in `docs/protocol-apw/vectors/v1.3/`.
+ * `raw` is the parsed JSON of a file in `spec/vectors/v1.3/`.
  */
 export async function runVector(raw: Record<string, unknown>): Promise<VectorReport> {
   const vector = String(raw.id);
